@@ -12,7 +12,6 @@ export default function MainTabs() {
   return (
     <Tab.Navigator
       screenOptions={({ route }) => ({
-        // Cấu hình icon cho từng tab
         tabBarIcon: ({ focused, color, size }) => {
           let iconName;
           if (route.name === "Home") {
@@ -31,10 +30,10 @@ export default function MainTabs() {
         headerShown: false,
       })}
     >
-      <Tab.Screen name="Home" component={HomeScreen} />
-      <Tab.Screen name="Cart" component={CartScreen} />
-      <Tab.Screen name="StoreInfo" component={StoreInfoScreen} />
-      <Tab.Screen name="Me" component={AccountSettingsScreen} />
+      <Tab.Screen name="Home" component={HomeScreen} options={{ title: "Trang chủ" }} />
+      <Tab.Screen name="Cart" component={CartScreen} options={{ title: "Giỏ hàng" }} />
+      <Tab.Screen name="StoreInfo" component={StoreInfoScreen} options={{ title: "Cửa hàng" }} />
+      <Tab.Screen name="Me" component={AccountSettingsScreen} options={{ title: "Cá nhân" }} />
     </Tab.Navigator>
   );
 }

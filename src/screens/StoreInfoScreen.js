@@ -2,7 +2,6 @@ import React from "react";
 import { View, Text, TouchableOpacity, FlatList, Linking } from "react-native";
 
 export default function StoreInfoScreen() {
-  // Dữ liệu nhiều chi nhánh
   const branches = [
     {
       id: "1",
@@ -36,7 +35,6 @@ export default function StoreInfoScreen() {
     Linking.openURL(url);
   };
 
-  // Hàm render từng chi nhánh
   const renderBranch = ({ item }) => {
     return (
       <View className="bg-gray-50 rounded-xl p-4 shadow-md mb-4">
@@ -44,15 +42,15 @@ export default function StoreInfoScreen() {
           {item.title}
         </Text>
         <Text className="text-lg font-semibold text-gray-800 mb-1">
-          Address:
+          Địa chỉ:
         </Text>
         <Text className="text-gray-700 mb-2">{item.address}</Text>
         <Text className="text-lg font-semibold text-gray-800 mb-1">
-          Phone:
+          Điện thoại:
         </Text>
         <Text className="text-gray-700 mb-2">{item.phone}</Text>
         <Text className="text-lg font-semibold text-gray-800 mb-1">
-          Opening Hours:
+          Giờ mở cửa:
         </Text>
         <Text className="text-gray-700 mb-4">{item.hours}</Text>
         <TouchableOpacity
@@ -60,7 +58,7 @@ export default function StoreInfoScreen() {
           className="bg-red-500 p-4 rounded-full"
         >
           <Text className="text-white text-center font-semibold">
-            View on Google Maps
+            Xem trên Google Maps
           </Text>
         </TouchableOpacity>
       </View>
@@ -69,13 +67,11 @@ export default function StoreInfoScreen() {
 
   return (
     <View className="flex-1 bg-white p-4">
-      {/* Header với tiêu đề mới */}
       <View className="px-4 pt-16 pb-4 border-b border-gray-200 mb-4">
-        <Text className="text-4xl font-bold text-gray-800">
-          Our Branches
+        <Text className="text-2xl font-bold text-gray-800">
+          Chi nhánh của chúng tôi
         </Text>
       </View>
-      {/* Danh sách chi nhánh */}
       <FlatList
         data={branches}
         keyExtractor={(item) => item.id}

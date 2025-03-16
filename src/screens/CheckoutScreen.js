@@ -15,57 +15,36 @@ export default function CheckoutScreen({ navigation }) {
   const { cartItems, clearCart } = useContext(CartContext);
 
   // State cho thông tin đơn hàng
-  const [paymentMethod, setPaymentMethod] = useState("cod"); 
   const [note, setNote] = useState("");
   const [voucher, setVoucher] = useState("");
   const [discount, setDiscount] = useState(0);
 
   // Danh sách địa chỉ
-  const [addresses, setAddresses] = useState([
-    {
-      id: "1",
-      name: "John Doe",
-      phone: "0123456789",
-      address: "123 Main Street, City, Country",
-    },
-    {
-      id: "2",
-      name: "Jane Smith",
-      phone: "0987654321",
-      address: "456 Secondary Street, City, Country",
-    },
+  const [addresses] = useState([
+    { id: "1", name: "John Doe", phone: "0123456789", address: "123 Main St" },
+    { id: "2", name: "Jane Smith", phone: "0987654321", address: "456 Secondary St" },
   ]);
   const [selectedAddress, setSelectedAddress] = useState(addresses[0].id);
 
   // Danh sách chi nhánh
-  const branches = [
-    {
-      id: "1",
-      title: "KFC Nguyễn Ánh Thủ",
-      address: "787 Đ. Nguyễn Ánh Thủ, Q12, HCM 70000",
-    },
-    {
-      id: "2",
-      title: "KFC Lê Văn Sỹ",
-      address: "123 Đường Lê Văn Sỹ, Q3, HCM 70000",
-    },
-    {
-      id: "3",
-      title: "KFC Nguyễn Trãi",
-      address: "456 Đường Nguyễn Trãi, Q1, HCM 70000",
-    },
-  ];
+  const [branches] = useState([
+    { id: "1", title: "KFC Nguyễn Ánh Thủ", address: "787 Đ. Nguyễn Ánh Thủ" },
+    { id: "2", title: "KFC Lê Văn Sỹ", address: "123 Đường Lê Văn Sỹ" },
+  ]);
   const [selectedBranch, setSelectedBranch] = useState(branches[0].id);
 
-  // Tính toán
-  const subtotal = cartItems.reduce(
-    (acc, item) => acc + item.price * item.quantity,
-    0
-  );
-  const deliveryFee = 1.0; 
-  const total = subtotal - discount + deliveryFee; // Dùng 'total' nhất quán
+  // Tính toán subtotal (có topping)
+  const cartSubtotal = cartItems.reduce((acc, item) => {
+    const toppingPrice = item.selectedToppings
+      ? item.selectedToppings.reduce((sum, t) => sum + t.price, 0)
+      : 0;
+    const itemTotal = (item.price + toppingPrice) * item.quantity;
+    return acc + itemTotal;
+  }, 0);
 
-  // Áp dụng voucher
+  const deliveryFee = 1.0;
+  const total = cartSubtotal - discount + deliveryFee;
+
   const handleApplyVoucher = () => {
     if (voucher.trim().toUpperCase() === "SAVE10") {
       setDiscount(10);
@@ -74,41 +53,52 @@ export default function CheckoutScreen({ navigation }) {
     }
   };
 
-  // Đặt hàng
   const handlePlaceOrder = () => {
     clearCart();
     navigation.replace("OrderTracking");
   };
 
-  // Render mỗi sản phẩm
-  const renderItem = ({ item }) => (
-    <View className="flex-row items-center py-3 border-b border-gray-200">
-      <Image
-        source={item.image}
-        className="w-16 h-16 mr-3 rounded-md"
-        resizeMode="cover"
-      />
-      <View className="flex-1">
-        <Text className="text-base font-semibold text-gray-700">
-          {item.name} x {item.quantity}
-        </Text>
-        <Text className="text-red-500 font-bold">
-          {`$${(item.price * item.quantity).toFixed(2)}`}
-        </Text>
+  // Hiển thị item + topping
+  const renderItem = ({ item }) => {
+    const toppingPrice = item.selectedToppings
+      ? item.selectedToppings.reduce((sum, t) => sum + t.price, 0)
+      : 0;
+    const itemTotal = (item.price + toppingPrice) * item.quantity;
+
+    return (
+      <View className="flex-row items-center py-3 border-b border-gray-200">
+        <Image
+          source={item.image}
+          className="w-16 h-16 mr-3 rounded-md"
+          resizeMode="cover"
+        />
+        <View className="flex-1">
+          <Text className="text-base font-semibold text-gray-700">
+            {item.name} x {item.quantity}
+          </Text>
+          {/* Topping */}
+          {item.selectedToppings && item.selectedToppings.length > 0 && (
+            <View className="mt-1">
+              {item.selectedToppings.map((top) => (
+                <Text key={top.id} className="text-xs text-gray-600">
+                  + {top.name} (${top.price.toFixed(2)})
+                </Text>
+              ))}
+            </View>
+          )}
+          {/* Giá item */}
+          <Text className="text-red-500 font-bold mt-1">
+            ${itemTotal.toFixed(2)}
+          </Text>
+        </View>
       </View>
-    </View>
-  );
+    );
+  };
 
   return (
     <View className="flex-1">
-      {/* Nội dung cuộn */}
-      <ScrollView
-        className="bg-white p-4"
-        contentContainerStyle={{ paddingBottom: 120 }} 
-        // Chừa khoảng trống cho thanh cố định
-      >
-        {/* Tiêu đề */}
-        <Text className="text-2xl font-bold text-red-500 mb-4">Checkout</Text>
+      <ScrollView className="bg-white p-4" contentContainerStyle={{ paddingBottom: 120 }}>
+        <Text className="text-2xl font-bold text-red-500 mb-4">Thanh toán</Text>
 
         {/* Danh sách sản phẩm */}
         <FlatList
@@ -117,27 +107,27 @@ export default function CheckoutScreen({ navigation }) {
           renderItem={renderItem}
           scrollEnabled={false}
           ListEmptyComponent={
-            <Text className="text-gray-500 mt-2">No items in cart.</Text>
+            <Text className="text-gray-500 mt-2">Không có sản phẩm trong giỏ hàng.</Text>
           }
         />
 
-        {/* Thông tin khách hàng: Note & Voucher */}
+        {/* Note & Voucher */}
         <View className="mt-4">
           <Text className="text-base font-semibold text-gray-800 mb-2">
-            Customer Note
+            Ghi chú khách hàng
           </Text>
           <TextInput
-            placeholder="Any special requests?"
+            placeholder="Có yêu cầu đặc biệt nào không?"
             value={note}
             onChangeText={setNote}
             className="bg-white border border-gray-300 rounded px-3 py-2 mb-4"
           />
           <Text className="text-base font-semibold text-gray-800 mb-2">
-            Voucher Code
+            Mã giảm giá
           </Text>
           <View className="flex-row items-center">
             <TextInput
-              placeholder="Enter voucher code"
+              placeholder="Nhập mã giảm giá"
               value={voucher}
               onChangeText={setVoucher}
               className="flex-1 bg-white border border-gray-300 rounded-l px-3 py-2"
@@ -146,7 +136,7 @@ export default function CheckoutScreen({ navigation }) {
               onPress={handleApplyVoucher}
               className="bg-red-500 px-4 py-2 rounded-r"
             >
-              <Text className="text-white font-semibold">Apply</Text>
+              <Text className="text-white font-semibold">Áp dụng</Text>
             </TouchableOpacity>
           </View>
         </View>
@@ -154,13 +144,9 @@ export default function CheckoutScreen({ navigation }) {
         {/* Chọn địa chỉ */}
         <View className="mt-4">
           <Text className="text-base font-semibold text-gray-800 mb-2">
-            Select Delivery Address
+            Chọn địa chỉ giao hàng
           </Text>
-          <ScrollView
-            style={{ maxHeight: 160 }}
-            showsVerticalScrollIndicator
-            nestedScrollEnabled
-          >
+          <ScrollView style={{ maxHeight: 160 }} nestedScrollEnabled>
             {addresses.map((addr) => (
               <TouchableOpacity
                 key={addr.id}
@@ -176,27 +162,15 @@ export default function CheckoutScreen({ navigation }) {
                 <Text className="text-gray-700">{addr.address}</Text>
               </TouchableOpacity>
             ))}
-            <TouchableOpacity
-              onPress={() => navigation.navigate("DeliveryAddressScreen")}
-              className="bg-red-500 p-3 rounded-lg mt-2"
-            >
-              <Text className="text-white text-center font-semibold">
-                Add New Address
-              </Text>
-            </TouchableOpacity>
           </ScrollView>
         </View>
 
         {/* Chọn chi nhánh */}
         <View className="mt-4">
           <Text className="text-base font-semibold text-gray-800 mb-2">
-            Select Branch
+            Chọn chi nhánh
           </Text>
-          <ScrollView
-            style={{ maxHeight: 160 }}
-            showsVerticalScrollIndicator
-            nestedScrollEnabled
-          >
+          <ScrollView style={{ maxHeight: 160 }} nestedScrollEnabled>
             {branches.map((branch) => (
               <TouchableOpacity
                 key={branch.id}
@@ -216,38 +190,39 @@ export default function CheckoutScreen({ navigation }) {
           </ScrollView>
         </View>
 
-       {/* Order Summary */}
+        {/* Order Summary */}
         <View className="bg-gray-50 rounded-xl p-4 mt-4">
           <View className="flex-row justify-between mb-2">
-            <Text className="text-gray-600">Subtotal</Text>
-            <Text className="text-gray-800">{`$${subtotal.toFixed(2)}`}</Text>
+            <Text className="text-gray-600">Tổng phụ</Text>
+            <Text className="text-gray-800">${cartSubtotal.toFixed(2)}</Text>
           </View>
           <View className="flex-row justify-between mb-2">
-            <Text className="text-gray-600">Delivery</Text>
-            <Text className="text-gray-800">{`$${deliveryFee.toFixed(2)}`}</Text>
+            <Text className="text-gray-600">Phí giao hàng</Text>
+            <Text className="text-gray-800">$1.00</Text>
           </View>
           <View className="flex-row justify-between mb-2">
-            <Text className="text-gray-600">Voucher Discount</Text>
-            <Text className="text-gray-800">{`-$${discount.toFixed(2)}`}</Text>
+            <Text className="text-gray-600">Giảm giá voucher</Text>
+            <Text className="text-gray-800">-${discount.toFixed(2)}</Text>
           </View>
           <View className="border-t border-gray-200 my-2" />
           <View className="flex-row justify-between mb-2">
-            <Text className="text-lg font-bold">Total</Text>
-            <Text className="text-lg font-bold text-red-500">{`$${total.toFixed(2)}`}</Text>
+            <Text className="text-lg font-bold">Tổng cộng</Text>
+            <Text className="text-lg font-bold text-red-500">
+              ${total.toFixed(2)}
+            </Text>
           </View>
         </View>
       </ScrollView>
 
-      {/*Tổng thanh toán + nút Đặt hàng*/}
+      {/* Thanh cố định dưới cùng */}
       <View className="absolute bottom-0 left-0 right-0 flex-row items-center justify-between bg-white px-4 py-3 border-t border-gray-200">
         {/* Tổng thanh toán */}
         <View>
           <Text className="text-sm text-gray-500">Tổng thanh toán</Text>
           <Text className="text-xl font-bold text-red-500">
-            đ{total.toLocaleString("en-US")}
+            ${total.toFixed(2)}
           </Text>
         </View>
-
         {/* Nút đặt hàng */}
         <TouchableOpacity
           onPress={handlePlaceOrder}

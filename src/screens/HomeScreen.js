@@ -15,14 +15,14 @@ export default function HomeScreen({ navigation }) {
   // Trạng thái tìm kiếm và danh mục
   const [searchValue, setSearchValue] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("Pizza");
-  const categories = ["All","Pizza","BanhMi", "Burgers", "Mexican", "Asian", "Drinks"];
+  const categories = ["Tất cả", "Pizza", "Bánh Mì", "Burger", "Mexico", "Châu Á", "Đồ uống"];
 
   // Dữ liệu sản phẩm (baseData)
   const baseData = [
     {
       id: 1,
-      name: "Cheese Pizza",
-      description: "Mixed pizza",
+      name: "Pizza Phô Mai",
+      description: "Pizza thập cẩm",
       price: 9.99,
       rating: 4.5,
       image: require("../../assets/Product-images/pizza.png"),
@@ -30,23 +30,23 @@ export default function HomeScreen({ navigation }) {
     {
       id: 2,
       name: "- Pizza",
-      description: "Mixed pizza",
+      description: "Pizza thập cẩm",
       price: 9.99,
       rating: 4.5,
       image: require("../../assets/Product-images/pizza.png"),
     },
     {
       id: 3,
-      name: "Cheese Pizza",
-      description: "Mixed pizza",
+      name: "Pizza Phô Mai",
+      description: "Pizza thập cẩm",
       price: 9.99,
       rating: 4.5,
       image: require("../../assets/Product-images/pizza.png"),
     },
     {
       id: 4,
-      name: "Cheese Pizza",
-      description: "Mixed pizza",
+      name: "Pizza Phô Mai",
+      description: "Pizza thập cẩm",
       price: 9.99,
       rating: 4.5,
       image: require("../../assets/Product-images/pizza.png"),
@@ -94,7 +94,6 @@ export default function HomeScreen({ navigation }) {
       </View>
     </TouchableOpacity>
   );
-  
 
   const renderFooter = () => {
     if (!loadingMore) return null;
@@ -108,14 +107,14 @@ export default function HomeScreen({ navigation }) {
   return (
     <View className="flex-1 bg-white">
       <View className="px-4 pt-16 pb-4">
-        <Text className="text-4xl font-bold text-gray-800">Delicious</Text>
+        <Text className="text-4xl font-bold text-gray-800">Món ngon</Text>
         <Text className="text-4xl font-bold text-gray-800 -mt-1">
-          food for you
+          dành cho bạn
         </Text>
         <View className="flex-row items-center bg-gray-100 rounded-full px-4 py-3 mt-4">
           <Ionicons name="search" size={20} color="#9CA3AF" />
           <TextInput
-            placeholder="search"
+            placeholder="Tìm kiếm"
             value={searchValue}
             onChangeText={setSearchValue}
             className="flex-1 ml-2 text-sm text-gray-700"
@@ -148,7 +147,6 @@ export default function HomeScreen({ navigation }) {
         </ScrollView>
       </View>
 
-      {/* Danh sách sản phẩm dạng grid 2 cột với infinite scroll */}
       <FlatList
         data={products}
         keyExtractor={(item) => item.id.toString()}

@@ -12,7 +12,7 @@ export default function RegisterScreen({ navigation }) {
 
   return (
     <View className="flex-1 bg-white justify-center px-8">
-      <Text className="text-2xl font-bold text-red-500 mb-6">Register</Text>
+      <Text className="text-2xl font-bold text-red-500 mb-6">Đăng ký</Text>
 
       <TextInput
         placeholder="Email"
@@ -21,7 +21,7 @@ export default function RegisterScreen({ navigation }) {
         className="border border-gray-300 rounded px-4 py-2 mb-4"
       />
       <TextInput
-        placeholder="Password"
+        placeholder="Mật khẩu"
         value={password}
         onChangeText={setPassword}
         secureTextEntry
@@ -32,11 +32,11 @@ export default function RegisterScreen({ navigation }) {
         onPress={handleRegister}
         className="bg-red-500 py-3 rounded-full mb-3"
       >
-        <Text className="text-white text-center font-semibold">Register</Text>
+        <Text className="text-white text-center font-semibold">Đăng ký</Text>
       </TouchableOpacity>
 
       <TouchableOpacity onPress={() => navigation.navigate("Login")}>
-        <Text className="text-red-500 text-center">Already have an account? Login</Text>
+        <Text className="text-red-500 text-center">Đã có tài khoản? Đăng nhập</Text>
       </TouchableOpacity>
     </View>
   );

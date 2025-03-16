@@ -6,24 +6,34 @@ import { CartContext } from "../context/CartContext";
 export default function CartScreen({ navigation }) {
   const { cartItems, removeFromCart, updateQuantity } = useContext(CartContext);
 
-  // Quản lý promo code và mức giảm giá
+  // Quản lý mã giảm giá hoặc khuyến mãi
   const [discount, setDiscount] = useState(0);
 
-  // Tính toán
-  const subtotal = cartItems.reduce(
-    (acc, item) => acc + item.price * item.quantity,
-    0
-  );
-  const deliveryFee = 1.0; 
-  const total = subtotal - discount + deliveryFee;
+  // Tính tổng phụ dựa trên topping
+  const cartSubtotal = cartItems.reduce((acc, item) => {
+    const toppingPrice = item.selectedToppings
+      ? item.selectedToppings.reduce((sum, t) => sum + t.price, 0)
+      : 0;
+    const itemTotal = (item.price + toppingPrice) * item.quantity;
+    return acc + itemTotal;
+  }, 0);
 
-  // Hàm điều hướng sang màn hình Checkout
+  const deliveryFee = 1.0;
+  const total = cartSubtotal - discount + deliveryFee;
+
+  // Điều hướng sang trang Thanh toán
   const handleCheckout = () => {
     navigation.navigate("Checkout");
   };
 
-  // Render từng sản phẩm trong giỏ
+  // Hiển thị từng sản phẩm trong giỏ hàng
   const renderItem = ({ item }) => {
+    // Tính giá topping và tổng giá của sản phẩm
+    const toppingPrice = item.selectedToppings
+      ? item.selectedToppings.reduce((sum, t) => sum + t.price, 0)
+      : 0;
+    const itemTotal = (item.price + toppingPrice) * item.quantity;
+
     return (
       <View className="flex-row items-center py-3 border-b border-gray-200">
         {/* Ảnh sản phẩm */}
@@ -32,16 +42,31 @@ export default function CartScreen({ navigation }) {
           className="w-16 h-16 mr-3"
           resizeMode="cover"
         />
-        {/* Tên và giá */}
+
+        {/* Tên sản phẩm, topping, giá */}
         <View className="flex-1">
           <Text className="text-base font-semibold text-gray-700">
             {item.name}
           </Text>
-          <Text className="text-red-500 font-bold">
-            ${item.price.toFixed(2)}
+
+          {/* Hiển thị topping (nếu có) */}
+          {item.selectedToppings && item.selectedToppings.length > 0 && (
+            <View className="mt-1">
+              {item.selectedToppings.map((top) => (
+                <Text key={top.id} className="text-xs text-gray-600">
+                  + {top.name} (${top.price.toFixed(2)})
+                </Text>
+              ))}
+            </View>
+          )}
+
+          {/* Tổng giá cho sản phẩm này */}
+          <Text className="text-red-500 font-bold mt-1">
+            ${itemTotal.toFixed(2)}
           </Text>
         </View>
-        {/* Nút +/- số lượng */}
+
+        {/* Nút tăng/giảm số lượng */}
         <View className="flex-row items-center">
           <TouchableOpacity
             onPress={() => updateQuantity(item.id, item.quantity - 1)}
@@ -57,11 +82,9 @@ export default function CartScreen({ navigation }) {
             <Ionicons name="add-circle-outline" size={24} color="#EF4444" />
           </TouchableOpacity>
         </View>
-        {/* Nút xóa */}
-        <TouchableOpacity
-          onPress={() => removeFromCart(item.id)}
-          className="ml-3"
-        >
+
+        {/* Nút xóa sản phẩm */}
+        <TouchableOpacity onPress={() => removeFromCart(item.id)} className="ml-3">
           <Ionicons name="close" size={20} color="#9CA3AF" />
         </TouchableOpacity>
       </View>
@@ -70,12 +93,11 @@ export default function CartScreen({ navigation }) {
 
   return (
     <View className="flex-1 bg-white">
-      {/* Tiêu đề với đường viền dưới */}
+      {/* Tiêu đề */}
       <View className="px-4 pt-16 pb-4 border-b border-gray-200">
-        <Text className="text-4xl font-bold text-gray-800">
-          Order Details
-        </Text>
+        <Text className="text-4xl font-bold text-gray-800">Giỏ hàng của tôi</Text>
       </View>
+
       <View className="flex-1 bg-white p-4">
         {/* Danh sách sản phẩm */}
         <FlatList
@@ -83,43 +105,45 @@ export default function CartScreen({ navigation }) {
           keyExtractor={(item) => String(item.id)}
           renderItem={renderItem}
           ListEmptyComponent={
-            <Text className="text-gray-500 mt-2">Your cart is empty.</Text>
+            <Text className="text-gray-500 mt-2">Giỏ hàng của bạn đang trống.</Text>
           }
         />
-  
-        {/* Tính tiền */}
+
+        {/* Thông tin thanh toán */}
         <View className="bg-gray-50 rounded-xl p-4 mt-4">
-          {/* Subtotal */}
+          {/* Tổng phụ */}
           <View className="flex-row justify-between mb-2">
-            <Text className="text-gray-600">Subtotal</Text>
-            <Text className="text-gray-800">{`$${subtotal.toFixed(2)}`}</Text>
+            <Text className="text-gray-600">Tổng phụ</Text>
+            <Text className="text-gray-800">${cartSubtotal.toFixed(2)}</Text>
           </View>
-          {/* Promo */}
+          {/* Giảm giá */}
           <View className="flex-row justify-between mb-2">
-            <Text className="text-gray-600">Promo Code</Text>
-            <Text className="text-gray-800">{`-$${discount.toFixed(2)}`}</Text>
+            <Text className="text-gray-600">Giảm giá</Text>
+            <Text className="text-gray-800">-${discount.toFixed(2)}</Text>
           </View>
-          {/* Delivery */}
+          {/* Phí giao hàng */}
           <View className="flex-row justify-between mb-2">
-            <Text className="text-gray-600">Delivery</Text>
-            <Text className="text-gray-800">{`$${deliveryFee.toFixed(2)}`}</Text>
+            <Text className="text-gray-600">Phí giao hàng</Text>
+            <Text className="text-gray-800">${deliveryFee.toFixed(2)}</Text>
           </View>
           {/* Ngăn cách */}
           <View className="border-t border-gray-200 my-2" />
-          {/* Total */}
+          {/* Tổng cộng */}
           <View className="flex-row justify-between mb-2">
-            <Text className="text-lg font-bold">Total</Text>
-            <Text className="text-lg font-bold text-red-500">{`$${total.toFixed(2)}`}</Text>
+            <Text className="text-lg font-bold">Tổng cộng</Text>
+            <Text className="text-lg font-bold text-red-500">
+              ${total.toFixed(2)}
+            </Text>
           </View>
         </View>
-  
-        {/* Nút Checkout */}
+
+        {/* Nút Thanh toán */}
         <TouchableOpacity
           onPress={handleCheckout}
           className="bg-red-500 p-4 rounded-full mt-4"
         >
           <Text className="text-white text-center text-lg font-semibold">
-            Checkout
+            Thanh toán
           </Text>
         </TouchableOpacity>
       </View>
