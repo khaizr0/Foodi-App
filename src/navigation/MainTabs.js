@@ -21,8 +21,8 @@ export default function MainTabs() {
             iconName = "cart-outline";
           } else if (route.name === "StoreInfo") {
             iconName = "storefront-outline";
-          } else if (route.name === "AccountSettings") {
-            iconName = "settings-outline";
+          } else if (route.name === "Me") {
+            iconName = "person-outline";
           }
           return <Ionicons name={iconName} size={size} color={color} />;
         },
@@ -34,7 +34,7 @@ export default function MainTabs() {
       <Tab.Screen name="Home" component={HomeScreen} />
       <Tab.Screen name="Cart" component={CartScreen} />
       <Tab.Screen name="StoreInfo" component={StoreInfoScreen} />
-      <Tab.Screen name="AccountSettings" component={AccountSettingsScreen} />
+      <Tab.Screen name="Me" component={AccountSettingsScreen} />
     </Tab.Navigator>
   );
 }

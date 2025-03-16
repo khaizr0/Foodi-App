@@ -15,7 +15,7 @@ export default function HomeScreen({ navigation }) {
   // Trạng thái tìm kiếm và danh mục
   const [searchValue, setSearchValue] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("Pizza");
-  const categories = ["Pizza", "Burgers", "Mexican", "Asian", "Drinks"];
+  const categories = ["All","Pizza","BanhMi", "Burgers", "Mexican", "Asian", "Drinks"];
 
   // Dữ liệu sản phẩm (baseData)
   const baseData = [
@@ -29,7 +29,7 @@ export default function HomeScreen({ navigation }) {
     },
     {
       id: 2,
-      name: "Pepperoni Pizza",
+      name: "- Pizza",
       description: "Mixed pizza",
       price: 9.99,
       rating: 4.5,
@@ -37,36 +37,31 @@ export default function HomeScreen({ navigation }) {
     },
     {
       id: 3,
-      name: "Veggie Pizza",
+      name: "Cheese Pizza",
       description: "Mixed pizza",
-      price: 8.99,
-      rating: 4.2,
+      price: 9.99,
+      rating: 4.5,
       image: require("../../assets/Product-images/pizza.png"),
     },
     {
       id: 4,
-      name: "Chicken Pizza",
+      name: "Cheese Pizza",
       description: "Mixed pizza",
-      price: 10.99,
-      rating: 4.7,
+      price: 9.99,
+      rating: 4.5,
       image: require("../../assets/Product-images/pizza.png"),
     },
   ];
 
-  // State quản lý danh sách sản phẩm, trang và trạng thái tải dữ liệu
   const [products, setProducts] = useState([]);
   const [page, setPage] = useState(1);
   const [loadingMore, setLoadingMore] = useState(false);
-
-  // Giới hạn số trang (vì chỉ có 1 trang dữ liệu)
   const maxPages = 1;
 
-  // Load dữ liệu sản phẩm lần đầu
   useEffect(() => {
     setProducts(baseData);
   }, []);
 
-  // Hàm tải thêm (infinite scroll)
   const loadMore = () => {
     if (loadingMore || page >= maxPages) return;
     setLoadingMore(true);
@@ -76,17 +71,18 @@ export default function HomeScreen({ navigation }) {
     }, 1000);
   };
 
-  // Render mỗi sản phẩm
   const renderProduct = ({ item }) => (
     <TouchableOpacity
       onPress={() => navigation.navigate("ProductDetail", { product: item })}
-      className="bg-white rounded-lg m-2 w-[44%] shadow-sm overflow-hidden"
+      className="bg-white w-[48%] shadow-sm mb-4 rounded-md"
     >
-      <Image source={item.image} className="w-full h-24" resizeMode="cover" />
+      <Image
+        source={item.image}
+        className="w-full h-24 rounded-t-md"
+        resizeMode="cover"
+      />
       <View className="p-2">
-        <Text className="text-base font-semibold text-gray-800">
-          {item.name}
-        </Text>
+        <Text className="text-base font-semibold text-gray-800">{item.name}</Text>
         <Text className="text-xs text-gray-500">{item.description}</Text>
         <View className="flex-row items-center justify-between mt-1">
           <Text className="text-red-500 font-bold">${item.price.toFixed(2)}</Text>
@@ -98,8 +94,8 @@ export default function HomeScreen({ navigation }) {
       </View>
     </TouchableOpacity>
   );
+  
 
-  // Render footer khi đang tải dữ liệu
   const renderFooter = () => {
     if (!loadingMore) return null;
     return (
@@ -111,13 +107,12 @@ export default function HomeScreen({ navigation }) {
 
   return (
     <View className="flex-1 bg-white">
-      {/* Header */}
-      <View className="px-4 pt-12 pb-4">
-        <Text className="text-3xl font-bold text-gray-800 mb-4">
-          Delicious food for you
+      <View className="px-4 pt-16 pb-4">
+        <Text className="text-4xl font-bold text-gray-800">Delicious</Text>
+        <Text className="text-4xl font-bold text-gray-800 -mt-1">
+          food for you
         </Text>
-        {/* Thanh tìm kiếm */}
-        <View className="flex-row items-center bg-gray-100 rounded-full px-4 py-2">
+        <View className="flex-row items-center bg-gray-100 rounded-full px-4 py-3 mt-4">
           <Ionicons name="search" size={20} color="#9CA3AF" />
           <TextInput
             placeholder="search"
@@ -125,14 +120,6 @@ export default function HomeScreen({ navigation }) {
             onChangeText={setSearchValue}
             className="flex-1 ml-2 text-sm text-gray-700"
           />
-          <TouchableOpacity onPress={() => alert("Filter pressed")}>
-            <Ionicons
-              name="options"
-              size={20}
-              color="#EF4444"
-              style={{ marginLeft: 8 }}
-            />
-          </TouchableOpacity>
         </View>
       </View>
 
@@ -147,7 +134,11 @@ export default function HomeScreen({ navigation }) {
                 onPress={() => setSelectedCategory(cat)}
                 className="mr-6"
               >
-                <Text className={`text-base font-semibold ${isActive ? "text-red-500" : "text-gray-500"}`}>
+                <Text
+                  className={`text-base font-semibold ${
+                    isActive ? "text-red-500" : "text-gray-500"
+                  }`}
+                >
                   {cat}
                 </Text>
                 {isActive && <View className="w-full h-1 bg-red-500 mt-1 rounded" />}
@@ -163,11 +154,20 @@ export default function HomeScreen({ navigation }) {
         keyExtractor={(item) => item.id.toString()}
         numColumns={2}
         renderItem={renderProduct}
-        contentContainerStyle={{ paddingBottom: 80 }}
+
+        columnWrapperStyle={{
+          justifyContent: "space-evenly",
+          marginBottom: 8,
+        }}
+        contentContainerStyle={{
+          paddingTop: 8,
+          paddingBottom: 80,
+        }}
         onEndReached={loadMore}
         onEndReachedThreshold={0.2}
         ListFooterComponent={renderFooter}
       />
+
     </View>
   );
 }

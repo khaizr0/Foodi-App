@@ -1,15 +1,15 @@
 import React, { useState, useContext } from "react";
 import { View, Text, Image, TouchableOpacity } from "react-native";
-import { CartContext } from "../context/CartContext"; // Import context
+import { CartContext } from "../context/CartContext";
 
 export default function ProductDetailScreen({ route, navigation }) {
   const { product } = route.params;
   const [quantity, setQuantity] = useState(1);
-  const { addToCart } = useContext(CartContext); // Lấy hàm addToCart
+  const { addToCart } = useContext(CartContext);
 
   const handleAddToCart = () => {
     addToCart(product, quantity);
-    navigation.navigate("Cart");
+    navigation.navigate("MainTabs", { screen: "Cart" });
   };
 
   return (
@@ -19,15 +19,9 @@ export default function ProductDetailScreen({ route, navigation }) {
         className="w-full h-64 mb-4"
         resizeMode="contain"
       />
-      <Text className="text-2xl font-bold text-gray-800 mb-2">
-        {product.name}
-      </Text>
-      <Text className="text-base text-gray-500 mb-4">
-        {product.description}
-      </Text>
-      <Text className="text-xl text-red-500 mb-2">
-        ${product.price.toFixed(2)}
-      </Text>
+      <Text className="text-2xl font-bold text-gray-800 mb-2">{product.name}</Text>
+      <Text className="text-base text-gray-500 mb-4">{product.description}</Text>
+      <Text className="text-xl text-red-500 mb-2">${product.price.toFixed(2)}</Text>
 
       {/* Chọn số lượng */}
       <View className="flex-row items-center mb-6">
