@@ -1,4 +1,4 @@
-// CHẠY "yarn node .\initDatabase.js" để tạo database
+// CHẠY "node .\initDatabase.js" để tạo database
 const mongoose = require("mongoose");
 const bcrypt = require("bcrypt");
 
