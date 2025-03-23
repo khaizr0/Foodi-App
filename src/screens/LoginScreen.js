@@ -1,13 +1,42 @@
 import React, { useState } from "react";
-import { View, Text, TextInput, TouchableOpacity } from "react-native";
+import { View, Text, TextInput, TouchableOpacity, Alert } from "react-native";
 
 export default function LoginScreen({ navigation }) {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
 
-  const handleLogin = () => {
-    // Xử lý đăng nhập..
-    navigation.replace("MainTabs");
+  const handleLogin = async () => {
+    // Log ra email, password để kiểm tra
+    console.log("handleLogin called with:", { email, password });
+
+    try {
+      const response = await fetch("http://10.0.2.2:5000/api/auth/login", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email, password }),
+      });
+
+      // Log status và response trả về
+      console.log("Response status:", response.status);
+
+      const data = await response.json();
+      console.log("Response data:", data);
+
+      if (response.ok) {
+        if (data.account.role === "customer") {
+          navigation.replace("MainTabs");
+        } else if (data.account.role === "employee") {
+          navigation.replace("EmployeeScreen");
+        } else if (data.account.role === "admin") {
+          navigation.replace("AdminScreen");
+        }
+      } else {
+        Alert.alert("Đăng nhập thất bại", data.error);
+      }
+    } catch (error) {
+      console.log("Error in handleLogin:", error);
+      Alert.alert("Lỗi", error.message);
+    }
   };
 
   return (
