@@ -14,7 +14,8 @@ import { Ionicons } from "@expo/vector-icons";
   export default function HomeScreen({ navigation }) {
   const [searchValue, setSearchValue] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("Tất cả");
-  const categories = ["Tất cả", "Pizza", "Bánh Mì", "Burger", "Mexico", "Châu Á", "Đồ uống"];
+  const categories = ["Tất cả", "Miền Trung", "Miền Bắc", "Miền Nam"];
+  const otherCategories = ["Món chính", "Món phụ", "Giải Khát", "Ăn Vặt"];
 
    const baseData = [
     { id: 1, name: "Pizza Phô Mai", description: "Pizza thập cẩm", price: 9.99, rating: 4.5, category: "Pizza", image: require("../../assets/Product-images/pizza.png") },
@@ -81,7 +82,8 @@ import { Ionicons } from "@expo/vector-icons";
         </View>
       </View>
 
-     <View className="mb-2">
+      <View className="mb-2">
+        {/* Danh mục chính */}
         <ScrollView horizontal showsHorizontalScrollIndicator={false} className="px-4">
           {categories.map((cat, idx) => (
             <TouchableOpacity key={idx} onPress={() => setSelectedCategory(cat)} className="mr-6">
@@ -90,7 +92,17 @@ import { Ionicons } from "@expo/vector-icons";
             </TouchableOpacity>
           ))}
         </ScrollView>
+
+        {/* Other Categories */}
+        <ScrollView horizontal showsHorizontalScrollIndicator={false} className="px-4 mt-2">
+          {otherCategories.map((cat, idx) => (
+            <TouchableOpacity key={idx} className="bg-gray-200 px-4 py-2 rounded-full mr-4">
+              <Text className="text-sm font-medium text-gray-700">{cat}</Text>
+            </TouchableOpacity>
+          ))}
+        </ScrollView>
       </View>
+
 
       <FlatList
         data={products}
