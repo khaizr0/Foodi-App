@@ -5,20 +5,24 @@ export default function RegisterScreen({ navigation }) {
   const [username, setUsername] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
 
   const handleRegister = async () => {
+    if (password !== confirmPassword) {
+      return Alert.alert("Lỗi", "Mật khẩu không khớp");
+    }
+
     try {
       const response = await fetch("http://localhost:5000/api/auth/register", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        // Nếu không truyền role thì mặc định là customer
         body: JSON.stringify({ username, email, password, role: "customer" }),
       });
+
       const data = await response.json();
 
       if (response.ok) {
         Alert.alert("Thông báo", "Đăng ký thành công");
-        // Sau đăng ký, tự động điều hướng sang màn hình đăng nhập hoặc MainTabs (tùy theo yêu cầu)
         navigation.replace("MainTabs");
       } else {
         Alert.alert("Đăng ký thất bại", data.error);
@@ -41,13 +45,22 @@ export default function RegisterScreen({ navigation }) {
       <TextInput
         placeholder="Email"
         value={email}
-        onChangeText={setEmail}
+        onChangeText={(text) => setEmail(text.toLowerCase())}
+        autoCapitalize="none"
+        keyboardType="email-address"
         className="border border-gray-300 rounded px-4 py-2 mb-4"
       />
       <TextInput
         placeholder="Mật khẩu"
         value={password}
         onChangeText={setPassword}
+        secureTextEntry
+        className="border border-gray-300 rounded px-4 py-2 mb-4"
+      />
+      <TextInput
+        placeholder="Xác nhận mật khẩu"
+        value={confirmPassword}
+        onChangeText={setConfirmPassword}
         secureTextEntry
         className="border border-gray-300 rounded px-4 py-2 mb-6"
       />
