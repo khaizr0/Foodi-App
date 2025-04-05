@@ -19,10 +19,8 @@ export default function LoginScreen({ navigation }) {
       if (response.ok) {
         if (data.account.role === "customer") {
           navigation.replace("MainTabs");
-        } else if (data.account.role === "employee") {
-          navigation.replace("EmployeeScreen");
-        } else if (data.account.role === "admin") {
-          navigation.replace("AdminNavigator");
+        } else if (data.account.role === 'admin' || data.account.role === 'employee') {
+          navigation.navigate("AdminNavigator", { role: data.account.role });
         }
       } else {
         Alert.alert("Đăng nhập thất bại", data.error);

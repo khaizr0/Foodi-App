@@ -52,7 +52,7 @@ export default function AppNavigator() {
       {/* Chi tiết đơn hàng */}
       <Stack.Screen name="OrderDetailScreen" component={OrderDetailScreen} options={{ headerShown: false }} />
 
-      {/* 👉 Điều hướng tới giao diện admin */}
+      {/* Điều hướng tới giao diện admin */}
       <Stack.Screen name="AdminNavigator" component={AdminNavigator} options={{ headerShown: false }} />
     </Stack.Navigator>
   );

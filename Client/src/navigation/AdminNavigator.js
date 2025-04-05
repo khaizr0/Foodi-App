@@ -68,7 +68,9 @@ const RevenueStack = () => (
   </Stack.Navigator>
 );
 
-const AdminNavigator = () => {
+const AdminNavigator = ({ route }) => {
+  const role = route?.params?.role || 'admin';
+
   return (
     <Tab.Navigator
       screenOptions={({ route }) => ({
@@ -91,8 +93,12 @@ const AdminNavigator = () => {
     >
       <Tab.Screen name="Đơn Hàng" component={OrderStack} />
       <Tab.Screen name="Món Ăn" component={FoodStack} />
-      <Tab.Screen name="Tài Khoản" component={AccountStack} />
-      <Tab.Screen name="Doanh thu" component={RevenueStack} />
+      {role !== 'employee' && (
+        <Tab.Screen name="Tài Khoản" component={AccountStack} />
+      )}
+      {role !== 'employee' && (
+        <Tab.Screen name="Doanh thu" component={RevenueStack} />
+      )}
     </Tab.Navigator>
   );
 };

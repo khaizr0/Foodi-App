@@ -1,9 +1,9 @@
 import React from "react";
-import { ScrollView, View, Text, TouchableOpacity, Image } from "react-native";
+import { ScrollView, View, Text, TouchableOpacity, Image, Alert } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 
 export default function AccountSettingsScreen({ navigation }) {
-  const handlePress = (label) => {
+  const handlePress = async (label) => {
     if (label === "Đơn Mua") {
       navigation.navigate("OrderStatusScreen");
     } else if (label === "Đổi mật khẩu") {
@@ -15,7 +15,21 @@ export default function AccountSettingsScreen({ navigation }) {
     } else if (label === "Đánh giá món ăn") {
       navigation.navigate("ReviewScreen");
     } else if (label === "Đăng xuất") {
-      alert("Đăng xuất thành công");
+      try {
+        const response = await fetch("http://10.0.2.2:5000/api/auth/logout", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+        });
+        if (response.ok) {
+          Alert.alert("Thông báo", "Đăng xuất thành công");
+          navigation.replace("Login");
+        } else {
+          const data = await response.json();
+          Alert.alert("Lỗi", data.error || "Không thể đăng xuất");
+        }
+      } catch (error) {
+        Alert.alert("Lỗi", error.message);
+      }
     }
   };
 

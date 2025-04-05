@@ -4,6 +4,7 @@ const cors = require('cors');
 const bcrypt = require('bcrypt');
 require('dotenv').config();
 const nodemailer = require('nodemailer');
+const session = require('express-session');
 
 const app = express();
 
@@ -19,6 +20,16 @@ mongoose.connect(mongoURI, {
 })
   .then(() => console.log('Đã kết nối thành công đến MongoDB Atlas'))
   .catch(err => console.error('Lỗi kết nối MongoDB:', err));
+
+app.use(session({
+  secret: 'TheTrueValueOfLife', 
+  resave: false,           
+  saveUninitialized: false,
+  cookie: { 
+    secure: false,
+    maxAge: 1000 * 60 * 60  // 1 giờ
+  }
+}));
 
 // Cấu hình Nodemailer
 const transporter = nodemailer.createTransport({
@@ -141,7 +152,7 @@ app.delete('/api/foods/:id', async (req, res) => {
   }
 });
 
-// API xác thực (đăng ký và đăng nhập)
+// Đăng ký
 app.post('/api/auth/register', async (req, res) => {
   try {
     const { username, email, password, role } = req.body;
@@ -166,6 +177,7 @@ app.post('/api/auth/register', async (req, res) => {
   }
 });
 
+//Đăng nhập
 app.post('/api/auth/login', async (req, res) => {
   try {
     const { email, password } = req.body;
@@ -177,6 +189,13 @@ app.post('/api/auth/login', async (req, res) => {
     if (!isMatch) {
       return res.status(400).json({ error: 'Email hoặc mật khẩu không đúng' });
     }
+
+    req.session.user = {
+      userId: account._id,
+      email: account.email,
+      role: account.role
+    };
+
     res.json({
       message: 'Đăng nhập thành công',
       account: { email: account.email, role: account.role }
@@ -184,6 +203,26 @@ app.post('/api/auth/login', async (req, res) => {
   } catch (err) {
     res.status(500).json({ error: err.message || 'Lỗi server khi đăng nhập' });
   }
+});
+
+
+//logout
+app.post('/api/auth/logout', (req, res) => {
+  req.session.destroy(err => {
+    if (err) {
+      return res.status(500).json({ error: 'Không thể đăng xuất, vui lòng thử lại' });
+    }
+    res.json({ message: 'Đăng xuất thành công' });
+  });
+});
+
+//Session checker
+app.get('/api/profile', (req, res) => {
+  if (!req.session.user) {
+    return res.status(401).json({ error: 'Bạn chưa đăng nhập' });
+  }
+  const userId = req.session.user.id;
+  res.json({ message: 'Thông tin người dùng', userId, email: req.session.user.email });
 });
 
 // API cho đơn hàng (giữ nguyên)
