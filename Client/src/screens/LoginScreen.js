@@ -28,7 +28,7 @@ export default function LoginScreen({ navigation }) {
         } else if (data.account.role === "employee") {
           navigation.replace("EmployeeScreen");
         } else if (data.account.role === "admin") {
-          navigation.replace("AdminScreen");
+          navigation.replace("AdminNavigator");
         }
       } else {
         Alert.alert("Đăng nhập thất bại", data.error);
