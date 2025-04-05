@@ -6,22 +6,16 @@ export default function LoginScreen({ navigation }) {
   const [password, setPassword] = useState("");
 
   const handleLogin = async () => {
-    // Log ra email, password để kiểm tra
     console.log("handleLogin called with:", { email, password });
-
     try {
       const response = await fetch("http://10.0.2.2:5000/api/auth/login", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email, password }),
       });
-
-      // Log status và response trả về
       console.log("Response status:", response.status);
-
       const data = await response.json();
       console.log("Response data:", data);
-
       if (response.ok) {
         if (data.account.role === "customer") {
           navigation.replace("MainTabs");
@@ -55,14 +49,14 @@ export default function LoginScreen({ navigation }) {
         secureTextEntry
         className="border border-gray-300 rounded px-4 py-2 mb-6"
       />
-      <TouchableOpacity
-        onPress={handleLogin}
-        className="bg-red-500 py-3 rounded-full mb-3"
-      >
+      <TouchableOpacity onPress={handleLogin} className="bg-red-500 py-3 rounded-full mb-3">
         <Text className="text-white text-center font-semibold">Đăng nhập</Text>
       </TouchableOpacity>
       <TouchableOpacity onPress={() => navigation.navigate("Register")}>
         <Text className="text-red-500 text-center">Tạo tài khoản mới</Text>
+      </TouchableOpacity>
+      <TouchableOpacity onPress={() => navigation.navigate("ForgotPassword")}>
+        <Text className="text-center text-red-500 mt-4">Quên mật khẩu?</Text>
       </TouchableOpacity>
     </View>
   );

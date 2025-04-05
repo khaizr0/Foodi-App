@@ -3,7 +3,7 @@ const mongoose = require('mongoose');
 const cors = require('cors');
 const bcrypt = require('bcrypt');
 require('dotenv').config();
-
+const nodemailer = require('nodemailer');
 
 const app = express();
 
@@ -19,6 +19,19 @@ mongoose.connect(mongoURI, {
 })
   .then(() => console.log('Đã kết nối thành công đến MongoDB Atlas'))
   .catch(err => console.error('Lỗi kết nối MongoDB:', err));
+
+// Cấu hình Nodemailer
+const transporter = nodemailer.createTransport({
+  host: 'smtp.gmail.com',
+  port: 465,
+  secure: true,
+  auth: {
+    user: 'khaizr0.maillerautosend@gmail.com',
+    pass: 'jeruuvjhmtfrvrkf',
+  },
+});
+
+const otpStore = {};
 
 // Schema cho món ăn
 const foodSchema = new mongoose.Schema({
@@ -243,6 +256,62 @@ app.put('/api/orders/:id/confirm', async (req, res) => {
     res.json(order);
   } catch (err) {
     res.status(500).json({ error: err.message || 'Server error' });
+  }
+});
+
+// API gửi yêu cầu reset mật khẩu qua OTP
+app.post('/api/auth/forgot-password', async (req, res) => {
+  const { email } = req.body;
+  try {
+    const user = await Account.findOne({ email });
+    if (!user) {
+      return res.status(400).json({ error: 'Email không tồn tại trong hệ thống, vui lòng nhập lại hoặc đăng kí tài khoản' });
+    }
+    // Tạo OTP 6 chữ số ngẫu nhiên
+    const otp = Math.floor(100000 + Math.random() * 900000).toString();
+    otpStore[email] = otp; // Lưu OTP tạm thời (có thể thêm thời gian hết hạn nếu cần)
+
+    const mailOptions = {
+      from: 'khaizr0.maillerautosend@gmail.com',
+      to: user.email,
+      subject: 'Password Reset OTP',
+      text: `Mã OTP của bạn là: ${otp}. Mã này có hiệu lực trong 15 phút.`,
+    };
+
+    transporter.sendMail(mailOptions, (error, info) => {
+      if (error) {
+        console.log(error);
+        return res.status(500).json({ error: 'Error sending email.' });
+      } else {
+        console.log('Email sent: ' + info.response);
+        return res.json({ message: 'Email gửi thành công, vui lòng kiểm tra hộp thư của bạn để lấy mã OTP.' });
+      }
+    });
+  } catch (error) {
+    console.log(error);
+    res.status(500).json({ error: 'Error occurred.' });
+  }
+});
+
+// API xác nhận OTP và reset mật khẩu
+app.post('/api/auth/reset-password-otp', async (req, res) => {
+  const { email, otp, newPassword } = req.body;
+  try {
+    if (!otpStore[email] || otpStore[email] !== otp) {
+      return res.status(400).json({ error: 'OTP không hợp lệ hoặc đã hết hạn.' });
+    }
+    const user = await Account.findOne({ email });
+    if (!user) {
+      return res.status(400).json({ error: 'Email không tồn tại trong hệ thống.' });
+    }
+    const hashedPassword = await bcrypt.hash(newPassword, 10);
+    user.password = hashedPassword;
+    await user.save();
+    delete otpStore[email];
+    res.json({ message: 'Mật khẩu đã được cập nhật thành công.' });
+  } catch (error) {
+    console.log(error);
+    res.status(500).json({ error: 'Error occurred.' });
   }
 });
 
