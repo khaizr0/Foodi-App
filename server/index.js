@@ -108,6 +108,14 @@ const orderSchema = new mongoose.Schema({
 }, { collection: 'orders' });
 const Order = mongoose.model('Order', orderSchema);
 
+// Schema cho voucher
+const voucherSchema = new mongoose.Schema({
+  code: { type: String, required: true, unique: true },
+  discountPercentage: { type: Number, required: true },
+  used: { type: Boolean, default: false } // true nếu voucher đã được sử dụng
+});
+const Voucher = mongoose.model('Voucher', voucherSchema);
+
 // API cho món ăn (giữ nguyên)
 app.get('/api/foods', async (req, res) => {
   try {
@@ -351,6 +359,96 @@ app.post('/api/auth/reset-password-otp', async (req, res) => {
   } catch (error) {
     console.log(error);
     res.status(500).json({ error: 'Error occurred.' });
+  }
+});
+
+// API cho Voucher
+// Lấy danh sách tất cả các voucher
+app.get('/api/vouchers', async (req, res) => {
+  try {
+    const vouchers = await Voucher.find();
+    res.json(vouchers);
+  } catch (err) {
+    console.error('Error fetching vouchers:', err);
+    res.status(500).json({ error: 'Server error' });
+  }
+});
+
+// Lấy thông tin voucher theo mã
+app.get('/api/vouchers/:code', async (req, res) => {
+  try {
+    const { code } = req.params;
+    const voucher = await Voucher.findOne({ code: code.toUpperCase() });
+    if (!voucher) {
+      return res.status(404).json({ error: 'Voucher không tồn tại' });
+    }
+    res.json(voucher);
+  } catch (err) {
+    console.error('Error fetching voucher:', err);
+    res.status(500).json({ error: 'Server error' });
+  }
+});
+
+// Tạo mới một voucher
+app.post('/api/vouchers', async (req, res) => {
+  try {
+    const { code, discountPercentage } = req.body;
+    // Chuyển mã voucher thành chữ in hoa để đảm bảo duy nhất
+    const normalizedCode = code.toUpperCase();
+
+    // Kiểm tra voucher đã tồn tại hay chưa
+    const existingVoucher = await Voucher.findOne({ code: normalizedCode });
+    if (existingVoucher) {
+      return res.status(400).json({ error: 'Voucher đã tồn tại' });
+    }
+
+    const newVoucher = new Voucher({
+      code: normalizedCode,
+      discountPercentage,
+    });
+
+    const savedVoucher = await newVoucher.save();
+    res.status(201).json(savedVoucher);
+  } catch (err) {
+    console.error('Error creating voucher:', err);
+    res.status(400).json({ error: err.message || 'Server error' });
+  }
+});
+
+// Cập nhật trạng thái sử dụng voucher (đánh dấu voucher đã dùng)
+app.put('/api/vouchers/:code/use', async (req, res) => {
+  try {
+    const { code } = req.params;
+    const voucher = await Voucher.findOne({ code: code.toUpperCase() });
+    if (!voucher) {
+      return res.status(404).json({ error: 'Voucher không tồn tại' });
+    }
+    // Nếu voucher đã được sử dụng
+    if (voucher.used) {
+      return res.status(400).json({ error: 'Voucher đã được sử dụng' });
+    }
+
+    voucher.used = true;
+    const updatedVoucher = await voucher.save();
+    res.json(updatedVoucher);
+  } catch (err) {
+    console.error('Error updating voucher:', err);
+    res.status(500).json({ error: 'Server error' });
+  }
+});
+
+// Xoá voucher theo mã (nếu cần)
+app.delete('/api/vouchers/:code', async (req, res) => {
+  try {
+    const { code } = req.params;
+    const deletedVoucher = await Voucher.findOneAndDelete({ code: code.toUpperCase() });
+    if (!deletedVoucher) {
+      return res.status(404).json({ error: 'Voucher không tồn tại' });
+    }
+    res.json({ message: 'Voucher đã được xoá' });
+  } catch (err) {
+    console.error('Error deleting voucher:', err);
+    res.status(500).json({ error: 'Server error' });
   }
 });
 

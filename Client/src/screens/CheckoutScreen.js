@@ -7,34 +7,38 @@ import {
   FlatList,
   ScrollView,
   Image,
+  Alert,
+  ActivityIndicator,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { CartContext } from "../context/CartContext";
+
+// Địa chỉ IP cố định cho Android Emulator
+const BASE_URL = "http://10.0.2.2:5000";
 
 export default function CheckoutScreen({ navigation }) {
   const { cartItems, clearCart } = useContext(CartContext);
 
   // State cho thông tin đơn hàng
   const [note, setNote] = useState("");
-  const [voucher, setVoucher] = useState("");
-  const [discount, setDiscount] = useState(0);
+  const [voucherInput, setVoucherInput] = useState("");
+  const [appliedVoucher, setAppliedVoucher] = useState(null);
   const [paymentMethod, setPaymentMethod] = useState("cash");
 
-  // Danh sách địa chỉ
+  // Danh sách địa chỉ và chi nhánh (giữ nguyên)
   const [addresses] = useState([
     { id: "1", name: "John Doe", phone: "0123456789", address: "123 Main St" },
     { id: "2", name: "Jane Smith", phone: "0987654321", address: "456 Secondary St" },
   ]);
   const [selectedAddress, setSelectedAddress] = useState(addresses[0].id);
 
-  // Danh sách chi nhánh
   const [branches] = useState([
     { id: "1", title: "KFC Nguyễn Ánh Thủ", address: "787 Đ. Nguyễn Ánh Thủ" },
     { id: "2", title: "KFC Lê Văn Sỹ", address: "123 Đường Lê Văn Sỹ" },
   ]);
   const [selectedBranch, setSelectedBranch] = useState(branches[0].id);
 
-  // Tính toán subtotal (có topping)
+  // Tính toán subtotal (bao gồm topping)
   const cartSubtotal = cartItems.reduce((acc, item) => {
     const toppingPrice = item.selectedToppings
       ? item.selectedToppings.reduce((sum, t) => sum + t.price, 0)
@@ -44,22 +48,95 @@ export default function CheckoutScreen({ navigation }) {
   }, 0);
 
   const deliveryFee = 1.0;
-  const total = cartSubtotal - discount + deliveryFee;
+  // Tính discountValue dựa trên voucher đã được áp dụng
+  const discountValue = appliedVoucher
+    ? cartSubtotal * (appliedVoucher.discountPercentage / 100)
+    : 0;
+  const total = cartSubtotal - discountValue + deliveryFee;
 
-  const handleApplyVoucher = () => {
-    if (voucher.trim().toUpperCase() === "SAVE10") {
-      setDiscount(10);
-    } else {
-      setDiscount(0);
+  // Hàm xử lý áp dụng voucher, sử dụng BASE_URL tương tự HomeScreen
+  const handleApplyVoucher = async () => {
+    if (appliedVoucher) {
+      Alert.alert(
+        "Voucher đã được áp dụng",
+        "Mỗi đơn hàng chỉ được nhập 1 voucher duy nhất."
+      );
+      return;
+    }
+    if (!voucherInput.trim()) {
+      Alert.alert("Lỗi", "Vui lòng nhập mã voucher");
+      return;
+    }
+  
+    try {
+      const response = await fetch(
+        `${BASE_URL}/api/vouchers/${voucherInput.trim().toUpperCase()}`
+      );
+      // Đọc dữ liệu response một lần duy nhất
+      const voucherData = await response.json();
+      console.log("Voucher data:", voucherData);
+      
+      if (!response.ok) {
+        Alert.alert(
+          "Voucher không hợp lệ",
+          voucherData.error || "Voucher không tồn tại"
+        );
+        return;
+      }
+      if (voucherData.used) {
+        Alert.alert("Voucher đã được sử dụng", "Voucher này đã được sử dụng.");
+        return;
+      }
+      setAppliedVoucher(voucherData);
+      Alert.alert(
+        "Áp dụng voucher thành công",
+        `Voucher giảm ${voucherData.discountPercentage}% cho đơn hàng của bạn.`
+      );
+    } catch (error) {
+      console.error("Error applying voucher:", error);
+      Alert.alert("Lỗi", `Đã xảy ra lỗi: ${error.message}`);
+    }
+  };
+  
+
+  // Hàm fetchVoucherData để gọi API từ endpoint BASE_URL
+  const fetchVoucherData = async () => {
+    try {
+      const response = await fetch(`${BASE_URL}/api/voucher`);
+      if (!response.ok) {
+        Alert.alert("Lỗi", "Không thể lấy dữ liệu voucher");
+        return;
+      }
+      const data = await response.json();
+      console.log("Voucher data:", data);
+      Alert.alert("Thông báo", "Dữ liệu voucher đã được lấy thành công.");
+    } catch (error) {
+      console.error("Error fetching voucher data:", error);
+      Alert.alert("Lỗi", `Đã xảy ra lỗi: ${error.message}`);
     }
   };
 
   const handlePlaceOrder = () => {
+    if (appliedVoucher) {
+      fetch(
+        `${BASE_URL}/api/vouchers/${voucherInput.trim().toUpperCase()}/use`,
+        {
+          method: "PUT",
+          headers: {
+            "Content-Type": "application/json",
+          },
+        }
+      ).catch((err) => console.error("Error updating voucher:", err));
+    }
     clearCart();
-    navigation.replace("OrderTracking");
+    if (paymentMethod === "cash") {
+      navigation.replace("OrderTracking");
+    } else if (paymentMethod === "card") {
+      navigation.replace("QRPayment");
+    }
   };
 
-  // Hiển thị item + topping
+  // Hàm render item cho danh sách sản phẩm
   const renderItem = ({ item }) => {
     const toppingPrice = item.selectedToppings
       ? item.selectedToppings.reduce((sum, t) => sum + t.price, 0)
@@ -69,7 +146,7 @@ export default function CheckoutScreen({ navigation }) {
     return (
       <View className="flex-row items-center py-3 border-b border-gray-200">
         <Image
-          source={item.image}
+          source={{ uri: item.image }}
           className="w-16 h-16 mr-3 rounded-md"
           resizeMode="cover"
         />
@@ -77,7 +154,6 @@ export default function CheckoutScreen({ navigation }) {
           <Text className="text-base font-semibold text-gray-700">
             {item.name} x {item.quantity}
           </Text>
-          {/* Topping */}
           {item.selectedToppings && item.selectedToppings.length > 0 && (
             <View className="mt-1">
               {item.selectedToppings.map((top) => (
@@ -87,7 +163,6 @@ export default function CheckoutScreen({ navigation }) {
               ))}
             </View>
           )}
-          {/* Giá item */}
           <Text className="text-red-500 font-bold mt-1">
             ${itemTotal.toFixed(2)}
           </Text>
@@ -98,21 +173,11 @@ export default function CheckoutScreen({ navigation }) {
 
   return (
     <View className="flex-1">
-      <ScrollView className="bg-white p-4" contentContainerStyle={{ paddingBottom: 120 }}>
+      <ScrollView
+        className="bg-white p-4"
+        contentContainerStyle={{ paddingBottom: 120 }}
+      >
         <Text className="text-2xl font-bold text-red-500 mb-4">Thanh toán</Text>
-
-        {/* Danh sách sản phẩm */}
-        <FlatList
-          data={cartItems}
-          keyExtractor={(item) => String(item.id)}
-          renderItem={renderItem}
-          scrollEnabled={false}
-          ListEmptyComponent={
-            <Text className="text-gray-500 mt-2">Không có sản phẩm trong giỏ hàng.</Text>
-          }
-        />
-
-        {/* Note & Voucher */}
         <View className="mt-4">
           <Text className="text-base font-semibold text-gray-800 mb-2">
             Ghi chú khách hàng
@@ -129,8 +194,9 @@ export default function CheckoutScreen({ navigation }) {
           <View className="flex-row items-center">
             <TextInput
               placeholder="Nhập mã giảm giá"
-              value={voucher}
-              onChangeText={setVoucher}
+              value={voucherInput}
+              onChangeText={setVoucherInput}
+              editable={!appliedVoucher}
               className="flex-1 bg-white border border-gray-300 rounded-l px-3 py-2"
             />
             <TouchableOpacity
@@ -142,7 +208,7 @@ export default function CheckoutScreen({ navigation }) {
           </View>
         </View>
 
-        {/* Chọn địa chỉ */}
+        {/* Các phần khác của giao diện checkout */}
         <View className="mt-4">
           <Text className="text-base font-semibold text-gray-800 mb-2">
             Chọn địa chỉ giao hàng
@@ -153,9 +219,7 @@ export default function CheckoutScreen({ navigation }) {
                 key={addr.id}
                 onPress={() => setSelectedAddress(addr.id)}
                 className={`p-3 mb-2 border rounded-lg ${
-                  selectedAddress === addr.id
-                    ? "border-red-500"
-                    : "border-gray-200"
+                  selectedAddress === addr.id ? "border-red-500" : "border-gray-200"
                 }`}
               >
                 <Text className="text-gray-800 font-semibold">{addr.name}</Text>
@@ -166,7 +230,6 @@ export default function CheckoutScreen({ navigation }) {
           </ScrollView>
         </View>
 
-        {/* Chọn chi nhánh */}
         <View className="mt-4">
           <Text className="text-base font-semibold text-gray-800 mb-2">
             Chọn chi nhánh
@@ -177,28 +240,27 @@ export default function CheckoutScreen({ navigation }) {
                 key={branch.id}
                 onPress={() => setSelectedBranch(branch.id)}
                 className={`p-3 mb-2 border rounded-lg ${
-                  selectedBranch === branch.id
-                    ? "border-red-500"
-                    : "border-gray-200"
+                  selectedBranch === branch.id ? "border-red-500" : "border-gray-200"
                 }`}
               >
-                <Text className="text-gray-800 font-semibold">
-                  {branch.title}
-                </Text>
+                <Text className="text-gray-800 font-semibold">{branch.title}</Text>
                 <Text className="text-gray-600 text-sm">{branch.address}</Text>
               </TouchableOpacity>
             ))}
           </ScrollView>
         </View>
 
-        {/* Chọn phương thức thanh toán */}
         <View className="mt-4">
-          <Text className="text-base font-semibold text-gray-800 mb-2">Phương thức thanh toán</Text>
+          <Text className="text-base font-semibold text-gray-800 mb-2">
+            Phương thức thanh toán
+          </Text>
           <View className="flex-row">
             <TouchableOpacity
               onPress={() => setPaymentMethod("cash")}
               className={`flex-1 p-3 mr-2 border rounded-lg ${
-                paymentMethod === "cash" ? "border-red-500 bg-red-100" : "border-gray-200"
+                paymentMethod === "cash"
+                  ? "border-red-500 bg-red-100"
+                  : "border-gray-200"
               }`}
             >
               <Text className="text-gray-800 font-semibold">Tiền mặt</Text>
@@ -206,15 +268,16 @@ export default function CheckoutScreen({ navigation }) {
             <TouchableOpacity
               onPress={() => setPaymentMethod("card")}
               className={`flex-1 p-3 border rounded-lg ${
-                paymentMethod === "card" ? "border-red-500 bg-red-100" : "border-gray-200"
+                paymentMethod === "card"
+                  ? "border-red-500 bg-red-100"
+                  : "border-gray-200"
               }`}
             >
-              <Text className="text-gray-800 font-semibold">Thẻ tín dụng</Text>
+              <Text className="text-gray-800 font-semibold">Mã QR</Text>
             </TouchableOpacity>
           </View>
         </View>
 
-        {/* Order Summary */}
         <View className="bg-gray-50 rounded-xl p-4 mt-4">
           <View className="flex-row justify-between mb-2">
             <Text className="text-gray-600">Tổng phụ</Text>
@@ -226,28 +289,21 @@ export default function CheckoutScreen({ navigation }) {
           </View>
           <View className="flex-row justify-between mb-2">
             <Text className="text-gray-600">Giảm giá voucher</Text>
-            <Text className="text-gray-800">-${discount.toFixed(2)}</Text>
+            <Text className="text-gray-800">-${discountValue.toFixed(2)}</Text>
           </View>
           <View className="border-t border-gray-200 my-2" />
           <View className="flex-row justify-between mb-2">
             <Text className="text-lg font-bold">Tổng cộng</Text>
-            <Text className="text-lg font-bold text-red-500">
-              ${total.toFixed(2)}
-            </Text>
+            <Text className="text-lg font-bold text-red-500">${total.toFixed(2)}</Text>
           </View>
         </View>
       </ScrollView>
 
-      {/* Thanh cố định dưới cùng */}
       <View className="absolute bottom-0 left-0 right-0 flex-row items-center justify-between bg-white px-4 py-3 border-t border-gray-200">
-        {/* Tổng thanh toán */}
         <View>
           <Text className="text-sm text-gray-500">Tổng thanh toán</Text>
-          <Text className="text-xl font-bold text-red-500">
-            ${total.toFixed(2)}
-          </Text>
+          <Text className="text-xl font-bold text-red-500">${total.toFixed(2)}</Text>
         </View>
-        {/* Nút đặt hàng */}
         <TouchableOpacity
           onPress={handlePlaceOrder}
           className="bg-red-500 px-6 py-3 rounded-lg"

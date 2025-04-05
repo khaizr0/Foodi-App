@@ -18,6 +18,7 @@ import EditAddressScreen from "../screens/EditAddressScreen";
 import OrderDetailScreen from "../screens/OrderDetailScreen";
 import ForgotPasswordScreen from "../screens/ForgotPasswordScreen";
 import ResetPasswordOTPScreen from "../screens/ResetPasswordOTPScreen";
+import QRPayment from "../screens/QRPayment"
 
 import AdminNavigator from "./AdminNavigator";
 
@@ -33,6 +34,7 @@ export default function AppNavigator() {
       <Stack.Screen name="ProductDetail" component={ProductDetailScreen} options={{ title: "Chi tiết sản phẩm" }} />
       <Stack.Screen name="Checkout" component={CheckoutScreen} options={{ title: "Thanh toán" }} />
       <Stack.Screen name="OrderTracking" component={OrderTrackingScreen} options={{ title: "Theo dõi đơn hàng" }} />
+      <Stack.Screen name="QRPayment" component={QRPayment} options={{ title: "Quét mã QR" }} />
 
       <Stack.Screen name="ForgotPassword" component={ForgotPasswordScreen} options={{ headerShown: false }} />
       <Stack.Screen name="ResetPasswordOTPScreen" component={ResetPasswordOTPScreen} options={{ headerShown: false }} />
