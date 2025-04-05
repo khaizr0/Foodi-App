@@ -1,10 +1,10 @@
 import React, { useState, useContext } from "react";
-import { View, Text, Image, TouchableOpacity, FlatList } from "react-native";
+import { View, Text, Image, Alert, TouchableOpacity, FlatList } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { CartContext } from "../context/CartContext";
 
 export default function CartScreen({ navigation }) {
-  const { cartItems, removeFromCart, updateQuantity } = useContext(CartContext);
+  const { cartItems, removeFromCart, updateQuantity, clearCart } = useContext(CartContext);
 
   // Quản lý mã giảm giá hoặc khuyến mãi
   const [discount, setDiscount] = useState(0);
@@ -24,6 +24,17 @@ export default function CartScreen({ navigation }) {
   // Điều hướng sang trang Thanh toán
   const handleCheckout = () => {
     navigation.navigate("Checkout");
+  };
+
+  const handleClearCart = () => {
+    Alert.alert(
+      "Xác nhận",
+      "Bạn có chắc muốn xóa tất cả sản phẩm khỏi giỏ hàng?",
+      [
+        { text: "Hủy", style: "cancel" },
+        { text: "Xóa tất cả", onPress: () => clearCart() }
+      ]
+    );
   };
 
   // Hiển thị từng sản phẩm trong giỏ hàng
@@ -68,23 +79,28 @@ export default function CartScreen({ navigation }) {
 
         {/* Nút tăng/giảm số lượng */}
         <View className="flex-row items-center">
-          <TouchableOpacity
-            onPress={() => updateQuantity(item.id, item.quantity - 1)}
-            className="px-2"
-          >
+          <TouchableOpacity onPress={() => updateQuantity(item.id, item.quantity - 1)} className="px-2">
             <Ionicons name="remove-circle-outline" size={24} color="#EF4444" />
           </TouchableOpacity>
-          <Text className="mx-1">{item.quantity}</Text>
-          <TouchableOpacity
-            onPress={() => updateQuantity(item.id, item.quantity + 1)}
-            className="px-2"
-          >
+          <Text className="mx-2">{item.quantity}</Text>
+          <TouchableOpacity onPress={() => updateQuantity(item.id, item.quantity + 1)} className="px-2">
             <Ionicons name="add-circle-outline" size={24} color="#EF4444" />
           </TouchableOpacity>
         </View>
 
         {/* Nút xóa sản phẩm */}
-        <TouchableOpacity onPress={() => removeFromCart(item.id)} className="ml-3">
+        <TouchableOpacity onPress={() =>
+            Alert.alert(
+              "Xác nhận",
+              "Bạn có chắc muốn xóa sản phẩm này khỏi giỏ hàng?",
+              [
+                { text: "Hủy", style: "cancel" },
+                { text: "Xóa", onPress: () => removeFromCart(item.id) }
+              ]
+            )
+          }
+          className="ml-3"
+        >
           <Ionicons name="close" size={20} color="#9CA3AF" />
         </TouchableOpacity>
       </View>
@@ -96,6 +112,11 @@ export default function CartScreen({ navigation }) {
       {/* Tiêu đề */}
       <View className="px-4 pt-16 pb-4 border-b border-gray-200">
         <Text className="text-4xl font-bold text-gray-800">Giỏ hàng của tôi</Text>
+        {cartItems.length > 0 && (
+          <TouchableOpacity onPress={handleClearCart} className="p-2 bg-gray-200 rounded-lg">
+            <Text className="text-gray-700 font-semibold">Xóa tất cả</Text>
+          </TouchableOpacity>
+        )}
       </View>
 
       <View className="flex-1 bg-white p-4">
@@ -139,12 +160,15 @@ export default function CartScreen({ navigation }) {
 
         {/* Nút Thanh toán */}
         <TouchableOpacity
-          onPress={handleCheckout}
-          className="bg-red-500 p-4 rounded-full mt-4"
-        >
-          <Text className="text-white text-center text-lg font-semibold">
-            Thanh toán
-          </Text>
+            onPress={handleCheckout}
+            disabled={cartItems.length === 0} // Vô hiệu hóa khi giỏ hàng trống
+            className={`p-4 rounded-full mt-4 ${
+              cartItems.length === 0 ? "bg-gray-300" : "bg-red-500"
+            }`}
+          >
+            <Text className="text-white text-center text-lg font-semibold">
+              Thanh toán
+            </Text>          
         </TouchableOpacity>
       </View>
     </View>

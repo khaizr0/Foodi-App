@@ -18,6 +18,7 @@ export default function CheckoutScreen({ navigation }) {
   const [note, setNote] = useState("");
   const [voucher, setVoucher] = useState("");
   const [discount, setDiscount] = useState(0);
+  const [paymentMethod, setPaymentMethod] = useState("cash");
 
   // Danh sách địa chỉ
   const [addresses] = useState([
@@ -188,6 +189,29 @@ export default function CheckoutScreen({ navigation }) {
               </TouchableOpacity>
             ))}
           </ScrollView>
+        </View>
+
+        {/* Chọn phương thức thanh toán */}
+        <View className="mt-4">
+          <Text className="text-base font-semibold text-gray-800 mb-2">Phương thức thanh toán</Text>
+          <View className="flex-row">
+            <TouchableOpacity
+              onPress={() => setPaymentMethod("cash")}
+              className={`flex-1 p-3 mr-2 border rounded-lg ${
+                paymentMethod === "cash" ? "border-red-500 bg-red-100" : "border-gray-200"
+              }`}
+            >
+              <Text className="text-gray-800 font-semibold">Tiền mặt</Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              onPress={() => setPaymentMethod("card")}
+              className={`flex-1 p-3 border rounded-lg ${
+                paymentMethod === "card" ? "border-red-500 bg-red-100" : "border-gray-200"
+              }`}
+            >
+              <Text className="text-gray-800 font-semibold">Thẻ tín dụng</Text>
+            </TouchableOpacity>
+          </View>
         </View>
 
         {/* Order Summary */}

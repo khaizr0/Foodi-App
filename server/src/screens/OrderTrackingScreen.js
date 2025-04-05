@@ -5,7 +5,7 @@ export default function OrderTrackingScreen({ route, navigation }) {
   const { cartItems } = route.params || [];
 
   const handleDone = () => {
-    navigation.replace("Home");
+    navigation.replace("MainTabs");
   };
 
   return (
