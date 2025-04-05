@@ -1,3 +1,5 @@
+// File: HomeScreen.js
+
 import React, { useState, useEffect } from "react";
 import {
   View,
@@ -11,50 +13,77 @@ import {
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 
-  export default function HomeScreen({ navigation }) {
+export default function HomeScreen({ navigation }) {
+  // State cho tìm kiếm và lọc theo vùng
   const [searchValue, setSearchValue] = useState("");
-  const [selectedCategory, setSelectedCategory] = useState("Tất cả");
-  const categories = ["Tất cả", "Miền Trung", "Miền Bắc", "Miền Nam"];
+  const [selectedRegion, setSelectedRegion] = useState("Tất cả");
+  const regions = ["Tất cả", "Bắc", "Trung", "Nam"];
+
   const otherCategories = ["Món chính", "Món phụ", "Giải Khát", "Ăn Vặt"];
 
-   const baseData = [
-    { id: 1, name: "Pizza Phô Mai", description: "Pizza thập cẩm", price: 9.99, rating: 4.5, category: "Pizza", image: require("../../assets/Product-images/pizza.png") },
-    { id: 2, name: "Bánh Mì Thịt", description: "Bánh mì truyền thống", price: 2.99, rating: 4.8, category: "Bánh Mì", image: require("../../assets/Product-images/pizza.png") },
-    { id: 3, name: "Burger Bò", description: "Burger phô mai bò", price: 5.99, rating: 4.3, category: "Burger", image: require("../../assets/Product-images/pizza.png") },
-    { id: 4, name: "Nước Cam", description: "Nước cam tươi", price: 1.99, rating: 4.7, category: "Đồ uống", image: require("../../assets/Product-images/pizza.png") },
-  ];
-
-  const [products, setProducts] = useState(baseData);
-  const [page, setPage] = useState(1);
+  const [products, setProducts] = useState([]);
+  const [loading, setLoading] = useState(true);
   const [loadingMore, setLoadingMore] = useState(false);
-  const maxPages = 1;
+  const [page, setPage] = useState(1);
+  const maxPages = 1;  // Điều chỉnh theo số trang mà API hỗ trợ
 
+  // Gọi API khi component mount hoặc khi searchValue, selectedRegion thay đổi
   useEffect(() => {
-    filterProducts();
-  }, [searchValue, selectedCategory]);
+    fetchProducts();
+  }, [searchValue, selectedRegion]);
 
-  const filterProducts = () => {
-    let filtered = baseData.filter((item) =>
-      item.name.toLowerCase().includes(searchValue.toLowerCase())
-    );
-    if (selectedCategory !== "Tất cả") {
-      filtered = filtered.filter((item) => item.category === selectedCategory);
+  // Hàm fetchProducts: Gọi API và lọc theo tên sản phẩm và vùng (region)
+  const fetchProducts = async () => {
+    setLoading(true);
+    try {
+      // Sử dụng địa chỉ IP thích hợp cho Android Emulator: http://10.0.2.2
+      const response = await fetch("http://10.0.2.2:5000/api/foods");
+      const data = await response.json();
+      
+      // Lọc theo tên sản phẩm
+      let filtered = data.filter((item) =>
+        item.name.toLowerCase().includes(searchValue.toLowerCase())
+      );
+      // Lọc theo vùng nếu không chọn "Tất cả"
+      if (selectedRegion !== "Tất cả") {
+        filtered = filtered.filter((item) => item.region === selectedRegion);
+      }
+      
+      setProducts(filtered);
+      setLoading(false);
+    } catch (error) {
+      console.error("Error fetching products:", error);
+      setLoading(false);
     }
-    setProducts(filtered);
   };
 
-  const loadMore = () => {
+  // Hàm loadMore: Giả lập tải thêm dữ liệu khi cuộn đến cuối danh sách
+  const loadMore = async () => {
     if (loadingMore || page >= maxPages) return;
     setLoadingMore(true);
-    setTimeout(() => {
-      setPage((prev) => prev + 1);
+    try {
+      const response = await fetch(`http://10.0.2.2:5000/api/foods?page=${page + 1}`);
+      const data = await response.json();
+      setProducts((prevProducts) => [...prevProducts, ...data]);
+      setPage((prevPage) => prevPage + 1);
+    } catch (error) {
+      console.error("Error fetching more products:", error);
+    } finally {
       setLoadingMore(false);
-    }, 1000);
+    }
   };
 
+  // Hàm renderProduct: Render mỗi sản phẩm dưới dạng một item trong danh sách
   const renderProduct = ({ item }) => (
-    <TouchableOpacity onPress={() => navigation.navigate("ProductDetail", { product: item })} className="bg-white w-[48%] shadow-sm mb-4 rounded-md">
-      <Image source={item.image} className="w-full h-24 rounded-t-md" resizeMode="cover" />
+    <TouchableOpacity
+      onPress={() => navigation.navigate("ProductDetail", { product: item })}
+      className="bg-white w-[48%] shadow-sm mb-4 rounded-md"
+    >
+      <Image
+        source={{ uri: item.imageUrl }} // Sử dụng trường imageUrl
+        className="w-full h-24 rounded-t-md"
+        resizeMode="cover"
+      />
       <View className="p-2">
         <Text className="text-base font-semibold text-gray-800">{item.name}</Text>
         <Text className="text-xs text-gray-500">{item.description}</Text>
@@ -69,31 +98,47 @@ import { Ionicons } from "@expo/vector-icons";
     </TouchableOpacity>
   );
 
-  const renderFooter = () => loadingMore ? <View className="py-4"><ActivityIndicator size="small" color="#EF4444" /></View> : null;
+  // Hàm renderFooter: Hiển thị ActivityIndicator khi đang tải thêm dữ liệu
+  const renderFooter = () =>
+    loadingMore ? (
+      <View className="py-4">
+        <ActivityIndicator size="small" color="#EF4444" />
+      </View>
+    ) : null;
 
   return (
     <View className="flex-1 bg-white">
+      {/* Header và thanh tìm kiếm */}
       <View className="px-4 pt-16 pb-4">
         <Text className="text-4xl font-bold text-gray-800">Món ngon</Text>
         <Text className="text-4xl font-bold text-gray-800 -mt-1">dành cho bạn</Text>
         <View className="flex-row items-center bg-gray-100 rounded-full px-4 py-3 mt-4">
           <Ionicons name="search" size={20} color="#9CA3AF" />
-          <TextInput placeholder="Tìm kiếm" value={searchValue} onChangeText={setSearchValue} className="flex-1 ml-2 text-sm text-gray-700" />
+          <TextInput
+            placeholder="Tìm kiếm"
+            value={searchValue}
+            onChangeText={setSearchValue}
+            className="flex-1 ml-2 text-sm text-gray-700"
+          />
         </View>
       </View>
 
+      {/* Danh mục lọc theo vùng */}
       <View className="mb-2">
-        {/* Danh mục chính */}
         <ScrollView horizontal showsHorizontalScrollIndicator={false} className="px-4">
-          {categories.map((cat, idx) => (
-            <TouchableOpacity key={idx} onPress={() => setSelectedCategory(cat)} className="mr-6">
-              <Text className={`text-base font-semibold ${cat === selectedCategory ? "text-red-500" : "text-gray-500"}`}>{cat}</Text>
-              {cat === selectedCategory && <View className="w-full h-1 bg-red-500 mt-1 rounded" />}
+          {regions.map((region, idx) => (
+            <TouchableOpacity
+              key={idx}
+              onPress={() => setSelectedRegion(region)}
+              className="mr-6"
+            >
+              <Text className={`text-base font-semibold ${region === selectedRegion ? "text-red-500" : "text-gray-500"}`}>
+                {region}
+              </Text>
+              {region === selectedRegion && <View className="w-full h-1 bg-red-500 mt-1 rounded" />}
             </TouchableOpacity>
           ))}
         </ScrollView>
-
-        {/* Other Categories */}
         <ScrollView horizontal showsHorizontalScrollIndicator={false} className="px-4 mt-2">
           {otherCategories.map((cat, idx) => (
             <TouchableOpacity key={idx} className="bg-gray-200 px-4 py-2 rounded-full mr-4">
@@ -103,18 +148,22 @@ import { Ionicons } from "@expo/vector-icons";
         </ScrollView>
       </View>
 
-
-      <FlatList
-        data={products}
-        keyExtractor={(item) => item.id.toString()}
-        numColumns={2}
-        renderItem={renderProduct}
-        columnWrapperStyle={{ justifyContent: "space-evenly", marginBottom: 8 }}
-        contentContainerStyle={{ paddingTop: 8, paddingBottom: 80 }}
-        onEndReached={loadMore}
-        onEndReachedThreshold={0.2}
-        ListFooterComponent={renderFooter}
-      />
+      {/* Danh sách sản phẩm */}
+      {loading ? (
+        <ActivityIndicator size="large" color="#EF4444" />
+      ) : (
+        <FlatList
+          data={products}
+          keyExtractor={(item) => (item.id ? item.id.toString() : item._id.toString())}
+          numColumns={2}
+          renderItem={renderProduct}
+          columnWrapperStyle={{ justifyContent: "space-evenly", marginBottom: 8 }}
+          contentContainerStyle={{ paddingTop: 8, paddingBottom: 80 }}
+          onEndReached={loadMore}
+          onEndReachedThreshold={0.2}
+          ListFooterComponent={renderFooter}
+        />
+      )}
     </View>
   );
 }
