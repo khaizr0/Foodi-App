@@ -49,7 +49,7 @@ export default function CartScreen({ navigation }) {
       <View className="flex-row items-center py-3 border-b border-gray-200">
         {/* Ảnh sản phẩm */}
         <Image
-          source={item.image}
+          source={{ uri: item.imageUrl }}
           className="w-16 h-16 mr-3"
           resizeMode="cover"
         />

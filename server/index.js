@@ -46,6 +46,7 @@ const otpStore = {};
 
 // Schema cho món ăn
 const foodSchema = new mongoose.Schema({
+
   imageUrl: {
     type: String,
     validate: {

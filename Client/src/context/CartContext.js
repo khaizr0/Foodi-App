@@ -8,10 +8,10 @@ export const CartProvider = ({ children }) => {
   // Thêm sản phẩm vào giỏ hàng
   const addToCart = (product, quantity) => {
     setCartItems(prevItems => {
-      const existing = prevItems.find(item => item.id === product.id);
+      const existing = prevItems.find(item => item._id === product._id);
       if (existing) {
         return prevItems.map(item =>
-          item.id === product.id ? { ...item, quantity: item.quantity + quantity } : item
+          item._id === product._id ? { ...item, quantity: item.quantity + quantity } : item
         );
       } else {
         return [...prevItems, { ...product, quantity }];

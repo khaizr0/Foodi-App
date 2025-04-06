@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { View, Text, ScrollView, TouchableOpacity, Alert, TextInput } from "react-native";
+import { View, Text, ScrollView, TouchableOpacity, Alert } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 
 export default function AddressManagementScreen({ navigation }) {
@@ -28,7 +28,8 @@ export default function AddressManagementScreen({ navigation }) {
         {
           text: "Xóa",
           style: "destructive",
-          onPress: () => setAddresses((prev) => prev.filter((addr) => addr.id !== id)),
+          onPress: () =>
+            setAddresses((prev) => prev.filter((addr) => addr.id !== id)),
         },
       ]
     );
@@ -36,6 +37,11 @@ export default function AddressManagementScreen({ navigation }) {
 
   const handleEdit = (address) => {
     navigation.navigate("EditAddressScreen", { address });
+  };
+
+  // Khi nhấn vào một địa chỉ, trả về dữ liệu đó cho CheckoutScreen
+  const handleSelect = (address) => {
+    navigation.navigate("Checkout", { selectedAddress: address });
   };
 
   return (
@@ -49,38 +55,31 @@ export default function AddressManagementScreen({ navigation }) {
         </Text>
       </View>
 
-      {/* Nội dung danh sách địa chỉ */}
       <ScrollView contentContainerStyle={{ padding: 16 }}>
         {addresses.map((addr) => (
-          <View key={addr.id} className="bg-gray-50 p-4 rounded-lg shadow mb-4">
-            <Text className="text-lg font-bold text-gray-800">{addr.name}</Text>
-            <Text className="text-gray-600">{addr.phone}</Text>
-            <Text className="text-gray-700">{addr.address}</Text>
-            <View className="flex-row justify-end mt-2">
-              <TouchableOpacity
-                onPress={() => handleEdit(addr)}
-                className="flex-row items-center mr-4"
-              >
-                <Ionicons
-                  name="pencil-outline"
-                  size={20}
-                  color="#EF4445"
-                />
-                <Text className="ml-1 text-sm text-gray-800">Sửa</Text>
-              </TouchableOpacity>
-              <TouchableOpacity
-                onPress={() => handleDelete(addr.id)}
-                className="flex-row items-center"
-              >
-                <Ionicons
-                  name="trash-outline"
-                  size={20}
-                  color="#EF4445"
-                />
-                <Text className="ml-1 text-sm text-gray-800">Xóa</Text>
-              </TouchableOpacity>
+          <TouchableOpacity key={addr.id} onPress={() => handleSelect(addr)}>
+            <View className="bg-gray-50 p-4 rounded-lg shadow mb-4">
+              <Text className="text-lg font-bold text-gray-800">{addr.name}</Text>
+              <Text className="text-gray-600">{addr.phone}</Text>
+              <Text className="text-gray-700">{addr.address}</Text>
+              <View className="flex-row justify-end mt-2">
+                <TouchableOpacity
+                  onPress={() => handleEdit(addr)}
+                  className="flex-row items-center mr-4"
+                >
+                  <Ionicons name="pencil-outline" size={20} color="#EF4445" />
+                  <Text className="ml-1 text-sm text-gray-800">Sửa</Text>
+                </TouchableOpacity>
+                <TouchableOpacity
+                  onPress={() => handleDelete(addr.id)}
+                  className="flex-row items-center"
+                >
+                  <Ionicons name="trash-outline" size={20} color="#EF4445" />
+                  <Text className="ml-1 text-sm text-gray-800">Xóa</Text>
+                </TouchableOpacity>
+              </View>
             </View>
-          </View>
+          </TouchableOpacity>
         ))}
         {/* Nút Thêm Địa chỉ mới */}
         <TouchableOpacity

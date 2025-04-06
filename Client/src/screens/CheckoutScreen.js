@@ -1,22 +1,19 @@
-import React, { useContext, useState } from "react";
+import React, { useContext, useState, useEffect } from "react";
 import {
   View,
   Text,
   TextInput,
   TouchableOpacity,
-  FlatList,
   ScrollView,
   Image,
   Alert,
-  ActivityIndicator,
 } from "react-native";
-import { Ionicons } from "@expo/vector-icons";
 import { CartContext } from "../context/CartContext";
 
 // Địa chỉ IP cố định cho Android Emulator
 const BASE_URL = "http://10.0.2.2:5000";
 
-export default function CheckoutScreen({ navigation }) {
+export default function CheckoutScreen({ navigation, route }) {
   const { cartItems, clearCart } = useContext(CartContext);
 
   // State cho thông tin đơn hàng
@@ -25,13 +22,17 @@ export default function CheckoutScreen({ navigation }) {
   const [appliedVoucher, setAppliedVoucher] = useState(null);
   const [paymentMethod, setPaymentMethod] = useState("cash");
 
-  // Danh sách địa chỉ và chi nhánh (giữ nguyên)
-  const [addresses] = useState([
-    { id: "1", name: "John Doe", phone: "0123456789", address: "123 Main St" },
-    { id: "2", name: "Jane Smith", phone: "0987654321", address: "456 Secondary St" },
-  ]);
-  const [selectedAddress, setSelectedAddress] = useState(addresses[0].id);
+  // State để lưu địa chỉ được chọn từ AddressManagementScreen
+  const [selectedAddress, setSelectedAddress] = useState(null);
 
+  // Nếu có tham số selectedAddress từ AddressManagementScreen, cập nhật state
+  useEffect(() => {
+    if (route.params?.selectedAddress) {
+      setSelectedAddress(route.params.selectedAddress);
+    }
+  }, [route.params]);
+
+  // Danh sách chi nhánh (giữ nguyên)
   const [branches] = useState([
     { id: "1", title: "KFC Nguyễn Ánh Thủ", address: "787 Đ. Nguyễn Ánh Thủ" },
     { id: "2", title: "KFC Lê Văn Sỹ", address: "123 Đường Lê Văn Sỹ" },
@@ -48,13 +49,12 @@ export default function CheckoutScreen({ navigation }) {
   }, 0);
 
   const deliveryFee = 1.0;
-  // Tính discountValue dựa trên voucher đã được áp dụng
   const discountValue = appliedVoucher
     ? cartSubtotal * (appliedVoucher.discountPercentage / 100)
     : 0;
   const total = cartSubtotal - discountValue + deliveryFee;
 
-  // Hàm xử lý áp dụng voucher, sử dụng BASE_URL tương tự HomeScreen
+  // Hàm xử lý áp dụng voucher
   const handleApplyVoucher = async () => {
     if (appliedVoucher) {
       Alert.alert(
@@ -72,10 +72,7 @@ export default function CheckoutScreen({ navigation }) {
       const response = await fetch(
         `${BASE_URL}/api/vouchers/${voucherInput.trim().toUpperCase()}`
       );
-      // Đọc dữ liệu response một lần duy nhất
       const voucherData = await response.json();
-      console.log("Voucher data:", voucherData);
-      
       if (!response.ok) {
         Alert.alert(
           "Voucher không hợp lệ",
@@ -93,56 +90,97 @@ export default function CheckoutScreen({ navigation }) {
         `Voucher giảm ${voucherData.discountPercentage}% cho đơn hàng của bạn.`
       );
     } catch (error) {
-      console.error("Error applying voucher:", error);
       Alert.alert("Lỗi", `Đã xảy ra lỗi: ${error.message}`);
     }
   };
-  
 
-  // Hàm fetchVoucherData để gọi API từ endpoint BASE_URL
-  const fetchVoucherData = async () => {
+  // Hàm tạo object orderData
+  const createOrderData = () => {
+    return {
+      customer: {
+        name: selectedAddress.name,
+        phone: selectedAddress.phone,
+        address: selectedAddress.address,
+      },
+      items: cartItems.map((item) => {
+        const toppingPrice = item.selectedToppings
+          ? item.selectedToppings.reduce((sum, t) => sum + t.price, 0)
+          : 0;
+        return {
+          name: item.name,
+          description: item.description || "",
+          quantity: item.quantity,
+          price: item.price,
+          discount: 0,
+          toppings: item.selectedToppings || [],
+        };
+      }),
+      priceDetails: {
+        subtotal: cartSubtotal,
+        tax: 0,
+        discount: discountValue,
+        total: total,
+      },
+      notes: note,
+      branch: branches.find((b) => b.id === selectedBranch),
+    };
+  };
+
+  // Hàm xử lý đặt hàng
+  const handlePlaceOrder = async () => {
     try {
-      const response = await fetch(`${BASE_URL}/api/voucher`);
-      if (!response.ok) {
-        Alert.alert("Lỗi", "Không thể lấy dữ liệu voucher");
+      // Nếu có voucher, cập nhật trạng thái voucher
+      if (appliedVoucher) {
+        await fetch(
+          `${BASE_URL}/api/vouchers/${voucherInput.trim().toUpperCase()}/use`,
+          {
+            method: "PUT",
+            headers: { "Content-Type": "application/json" },
+          }
+        );
+      }
+  
+      // Kiểm tra xem đã chọn địa chỉ chưa
+      if (!selectedAddress) {
+        Alert.alert("Lỗi", "Vui lòng chọn địa chỉ giao hàng");
         return;
       }
-      const data = await response.json();
-      console.log("Voucher data:", data);
-      Alert.alert("Thông báo", "Dữ liệu voucher đã được lấy thành công.");
-    } catch (error) {
-      console.error("Error fetching voucher data:", error);
-      Alert.alert("Lỗi", `Đã xảy ra lỗi: ${error.message}`);
-    }
-  };
-
-  const handlePlaceOrder = () => {
-    if (appliedVoucher) {
-      fetch(
-        `${BASE_URL}/api/vouchers/${voucherInput.trim().toUpperCase()}/use`,
-        {
-          method: "PUT",
-          headers: {
-            "Content-Type": "application/json",
-          },
+  
+      // Tạo orderData dùng chung cho cả 2 hình thức thanh toán
+      const orderData = createOrderData();
+  
+      if (paymentMethod === "cash") {
+        // Với thanh toán bằng tiền mặt, gọi API ngay và clear cart
+        const response = await fetch(`${BASE_URL}/api/orders`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(orderData),
+        });
+  
+        if (!response.ok) {
+          const errorData = await response.json();
+          throw new Error(errorData.error || "Error placing order");
         }
-      ).catch((err) => console.error("Error updating voucher:", err));
-    }
-    clearCart();
-    if (paymentMethod === "cash") {
-      navigation.replace("OrderTracking");
-    } else if (paymentMethod === "card") {
-      navigation.replace("QRPayment");
+  
+        clearCart();
+        navigation.replace("OrderTracking");
+      } else if (paymentMethod === "card") {
+        // Với thanh toán bằng QR, không clear cart ngay
+        // Chuyển sang màn hình QRPayment, truyền orderData để sau khi quét thành công mới lưu đơn hàng
+        navigation.navigate("QRPayment", { orderData });
+      }
+    } catch (error) {
+      Alert.alert("Lỗi", error.message);
     }
   };
 
-  // Hàm render item cho danh sách sản phẩm
+  // Hàm render item cho danh sách sản phẩm (giữ nguyên)
   const renderItem = ({ item }) => {
     const toppingPrice = item.selectedToppings
       ? item.selectedToppings.reduce((sum, t) => sum + t.price, 0)
       : 0;
     const itemTotal = (item.price + toppingPrice) * item.quantity;
-
+  
     return (
       <View className="flex-row items-center py-3 border-b border-gray-200">
         <Image
@@ -173,24 +211,18 @@ export default function CheckoutScreen({ navigation }) {
 
   return (
     <View className="flex-1">
-      <ScrollView
-        className="bg-white p-4"
-        contentContainerStyle={{ paddingBottom: 120 }}
-      >
+      <ScrollView className="bg-white p-4" contentContainerStyle={{ paddingBottom: 120 }}>
         <Text className="text-2xl font-bold text-red-500 mb-4">Thanh toán</Text>
+
         <View className="mt-4">
-          <Text className="text-base font-semibold text-gray-800 mb-2">
-            Ghi chú khách hàng
-          </Text>
+          <Text className="text-base font-semibold text-gray-800 mb-2">Ghi chú khách hàng</Text>
           <TextInput
             placeholder="Có yêu cầu đặc biệt nào không?"
             value={note}
             onChangeText={setNote}
             className="bg-white border border-gray-300 rounded px-3 py-2 mb-4"
           />
-          <Text className="text-base font-semibold text-gray-800 mb-2">
-            Mã giảm giá
-          </Text>
+          <Text className="text-base font-semibold text-gray-800 mb-2">Mã giảm giá</Text>
           <View className="flex-row items-center">
             <TextInput
               placeholder="Nhập mã giảm giá"
@@ -199,49 +231,40 @@ export default function CheckoutScreen({ navigation }) {
               editable={!appliedVoucher}
               className="flex-1 bg-white border border-gray-300 rounded-l px-3 py-2"
             />
-            <TouchableOpacity
-              onPress={handleApplyVoucher}
-              className="bg-red-500 px-4 py-2 rounded-r"
-            >
+            <TouchableOpacity onPress={handleApplyVoucher} className="bg-red-500 px-4 py-2 rounded-r">
               <Text className="text-white font-semibold">Áp dụng</Text>
             </TouchableOpacity>
           </View>
         </View>
 
-        {/* Các phần khác của giao diện checkout */}
+        {/* Phần chọn địa chỉ giao hàng lấy từ AddressManagementScreen */}
         <View className="mt-4">
-          <Text className="text-base font-semibold text-gray-800 mb-2">
-            Chọn địa chỉ giao hàng
-          </Text>
-          <ScrollView style={{ maxHeight: 160 }} nestedScrollEnabled>
-            {addresses.map((addr) => (
-              <TouchableOpacity
-                key={addr.id}
-                onPress={() => setSelectedAddress(addr.id)}
-                className={`p-3 mb-2 border rounded-lg ${
-                  selectedAddress === addr.id ? "border-red-500" : "border-gray-200"
-                }`}
-              >
-                <Text className="text-gray-800 font-semibold">{addr.name}</Text>
-                <Text className="text-gray-600 text-sm">{addr.phone}</Text>
-                <Text className="text-gray-700">{addr.address}</Text>
-              </TouchableOpacity>
-            ))}
-          </ScrollView>
+          <Text className="text-base font-semibold text-gray-800 mb-2">Địa chỉ giao hàng</Text>
+          {selectedAddress ? (
+            <View className="bg-gray-50 p-4 rounded-lg">
+              <Text className="text-lg font-bold text-gray-800">{selectedAddress.name}</Text>
+              <Text className="text-gray-600">{selectedAddress.phone}</Text>
+              <Text className="text-gray-700">{selectedAddress.address}</Text>
+            </View>
+          ) : (
+            <Text className="text-gray-500 mb-2">Chưa chọn địa chỉ</Text>
+          )}
+          <TouchableOpacity
+            onPress={() => navigation.navigate("AddressManagementScreen")}
+            className="bg-red-500 p-3 rounded-full mt-2"
+          >
+            <Text className="text-white text-center font-semibold">Chọn địa chỉ</Text>
+          </TouchableOpacity>
         </View>
 
         <View className="mt-4">
-          <Text className="text-base font-semibold text-gray-800 mb-2">
-            Chọn chi nhánh
-          </Text>
+          <Text className="text-base font-semibold text-gray-800 mb-2">Chọn chi nhánh</Text>
           <ScrollView style={{ maxHeight: 160 }} nestedScrollEnabled>
             {branches.map((branch) => (
               <TouchableOpacity
                 key={branch.id}
                 onPress={() => setSelectedBranch(branch.id)}
-                className={`p-3 mb-2 border rounded-lg ${
-                  selectedBranch === branch.id ? "border-red-500" : "border-gray-200"
-                }`}
+                className={`p-3 mb-2 border rounded-lg ${selectedBranch === branch.id ? "border-red-500" : "border-gray-200"}`}
               >
                 <Text className="text-gray-800 font-semibold">{branch.title}</Text>
                 <Text className="text-gray-600 text-sm">{branch.address}</Text>
@@ -251,27 +274,17 @@ export default function CheckoutScreen({ navigation }) {
         </View>
 
         <View className="mt-4">
-          <Text className="text-base font-semibold text-gray-800 mb-2">
-            Phương thức thanh toán
-          </Text>
+          <Text className="text-base font-semibold text-gray-800 mb-2">Phương thức thanh toán</Text>
           <View className="flex-row">
             <TouchableOpacity
               onPress={() => setPaymentMethod("cash")}
-              className={`flex-1 p-3 mr-2 border rounded-lg ${
-                paymentMethod === "cash"
-                  ? "border-red-500 bg-red-100"
-                  : "border-gray-200"
-              }`}
+              className={`flex-1 p-3 mr-2 border rounded-lg ${paymentMethod === "cash" ? "border-red-500 bg-red-100" : "border-gray-200"}`}
             >
               <Text className="text-gray-800 font-semibold">Tiền mặt</Text>
             </TouchableOpacity>
             <TouchableOpacity
               onPress={() => setPaymentMethod("card")}
-              className={`flex-1 p-3 border rounded-lg ${
-                paymentMethod === "card"
-                  ? "border-red-500 bg-red-100"
-                  : "border-gray-200"
-              }`}
+              className={`flex-1 p-3 border rounded-lg ${paymentMethod === "card" ? "border-red-500 bg-red-100" : "border-gray-200"}`}
             >
               <Text className="text-gray-800 font-semibold">Mã QR</Text>
             </TouchableOpacity>
@@ -304,10 +317,7 @@ export default function CheckoutScreen({ navigation }) {
           <Text className="text-sm text-gray-500">Tổng thanh toán</Text>
           <Text className="text-xl font-bold text-red-500">${total.toFixed(2)}</Text>
         </View>
-        <TouchableOpacity
-          onPress={handlePlaceOrder}
-          className="bg-red-500 px-6 py-3 rounded-lg"
-        >
+        <TouchableOpacity onPress={handlePlaceOrder} className="bg-red-500 px-6 py-3 rounded-lg">
           <Text className="text-white font-semibold">Đặt hàng</Text>
         </TouchableOpacity>
       </View>
