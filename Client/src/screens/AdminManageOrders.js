@@ -7,21 +7,21 @@ import { useNavigation } from '@react-navigation/native';
 
 const ManageOrders = () => {
   const [orders, setOrders] = useState([]);
-  const [error, setError] = useState(null); // Thêm trạng thái lỗi
+  const [error, setError] = useState(null); 
   const scrollRef = useRef(null);
   const navigation = useNavigation();
 
   useEffect(() => {
     fetchOrders();
   }, []);
-  const API_LOCAL = `http://192.168.1.10:5000`;
+  const API_LOCAL = `http://192.168.1.28:5000`;
   const fetchOrders = async () => {
     try {
       const response = await axios.get(`${API_LOCAL}/api/orders`);
       console.log('Orders fetched:', response.data);
       if (Array.isArray(response.data)) {
         setOrders(response.data);
-        setError(null); // Xóa thông báo lỗi nếu thành công
+        setError(null); 
       } else {
         throw new Error('Dữ liệu trả về không phải là mảng');
       }
@@ -96,7 +96,7 @@ const ManageOrders = () => {
           ref={scrollRef}
           data={memoizedOrderList}
           renderItem={renderItem}
-          keyExtractor={(item) => item._id.toString()} // Đảm bảo _id là chuỗi
+          keyExtractor={(item) => item._id.toString()} 
           keyboardShouldPersistTaps="handled"
         />
       )}

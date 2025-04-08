@@ -39,7 +39,7 @@ const ManageAccounts = () => {
         fetchAccounts();
     }, []);
 
-    const API_LOCAL = `http://192.168.1.10:5000`;
+    const API_LOCAL = `http://192.168.1.28:5000`;
     const fetchAccounts = async () => {
         try {
             const response = await axios.get(`${API_LOCAL}/api/accounts`);

@@ -2,7 +2,7 @@ import React, { useContext } from "react";
 import { View, Image, TouchableOpacity, Text, Alert } from "react-native";
 import { CartContext } from "../context/CartContext";
 
-const BASE_URL = "http://10.0.2.2:5000";
+const BASE_URL = "http://192.168.1.28:5000";
 
 export default function QRPayment({ route, navigation }) {
   const { orderData } = route.params;

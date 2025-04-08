@@ -31,7 +31,7 @@ export default function HomeScreen({ navigation }) {
     setLoading(true);
     try {
       // Thay localhost bằng địa chỉ IP của máy tính của bạn
-      const response = await fetch("http://192.168.x.x:5000/foods");
+      const response = await fetch("http://192.168.1.28:5000/api/foods");
       const data = await response.json();
 
       let filtered = data.filter((item) =>

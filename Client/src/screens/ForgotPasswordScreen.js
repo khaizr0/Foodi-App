@@ -6,7 +6,7 @@ export default function ForgotPasswordScreen({ navigation }) {
 
   const handleForgotPassword = async () => {
     try {
-      const response = await fetch("http://10.0.2.2:5000/api/auth/forgot-password", {
+      const response = await fetch("http://192.168.1.28:5000/api/auth/forgot-password", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email }),

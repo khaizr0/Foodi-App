@@ -452,6 +452,45 @@ app.delete('/api/vouchers/:code', async (req, res) => {
     res.status(500).json({ error: 'Server error' });
   }
 });
+// API lấy danh sách tất cả tài khoản
+app.get('/api/accounts', async (req, res) => {
+  try {
+    const accounts = await Account.find(); // Lấy tất cả tài khoản từ collection 'accounts'
+    res.json(accounts);
+  } catch (err) {
+    console.error('Error fetching accounts:', err);
+    res.status(500).json({ error: 'Server error' });
+  }
+});
+// Cập nhật tài khoản
+app.put('/api/accounts/:id', async (req, res) => {
+  try {
+    const updatedAccount = await Account.findByIdAndUpdate(
+      req.params.id,
+      req.body,
+      { new: true, runValidators: true }
+    );
+    if (!updatedAccount) {
+      return res.status(404).json({ error: 'Account not found' });
+    }
+    res.json(updatedAccount);
+  } catch (err) {
+    res.status(400).json({ error: err.message || 'Server error' });
+  }
+});
+
+// Xóa tài khoản
+app.delete('/api/accounts/:id', async (req, res) => {
+  try {
+    const deletedAccount = await Account.findByIdAndDelete(req.params.id);
+    if (!deletedAccount) {
+      return res.status(404).json({ error: 'Account not found' });
+    }
+    res.json({ message: 'Account deleted' });
+  } catch (err) {
+    res.status(500).json({ error: 'Server error' });
+  }
+});
 
 // Khởi động server
 const PORT = 5000;

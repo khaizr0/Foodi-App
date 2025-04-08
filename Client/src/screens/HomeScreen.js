@@ -38,7 +38,7 @@ export default function HomeScreen({ navigation }) {
     setLoading(true);
     try {
       // Sử dụng địa chỉ IP thích hợp cho Android Emulator: http://10.0.2.2
-      const response = await fetch("http://10.0.2.2:5000/api/foods");
+      const response = await fetch("http://1192.168.1.28:5000/api/foods");
       const data = await response.json();
 
       // Lọc theo tên sản phẩm
@@ -71,7 +71,7 @@ export default function HomeScreen({ navigation }) {
     if (loadingMore || page >= maxPages) return;
     setLoadingMore(true);
     try {
-      const response = await fetch(`http://10.0.2.2:5000/api/foods?page=${page + 1}`);
+      const response = await fetch(`http://192.168.1.28:5000/api/foods?page=${page + 1}`);
       const data = await response.json();
       setProducts((prevProducts) => [...prevProducts, ...data]);
       setPage((prevPage) => prevPage + 1);
