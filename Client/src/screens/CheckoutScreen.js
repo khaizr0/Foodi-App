@@ -123,23 +123,14 @@ export default function CheckoutScreen({ navigation, route }) {
       },
       notes: note,
       branch: branches.find((b) => b.id === selectedBranch),
+      status: "Đang xử lí", 
+      orderDate: new Date(),
     };
   };
 
   // Hàm xử lý đặt hàng
   const handlePlaceOrder = async () => {
     try {
-      // Nếu có voucher, cập nhật trạng thái voucher
-      if (appliedVoucher) {
-        await fetch(
-          `${BASE_URL}/api/vouchers/${voucherInput.trim().toUpperCase()}/use`,
-          {
-            method: "PUT",
-            headers: { "Content-Type": "application/json" },
-          }
-        );
-      }
-  
       // Kiểm tra xem đã chọn địa chỉ chưa
       if (!selectedAddress) {
         Alert.alert("Lỗi", "Vui lòng chọn địa chỉ giao hàng");
@@ -162,6 +153,22 @@ export default function CheckoutScreen({ navigation, route }) {
           throw new Error(errorData.error || "Error placing order");
         }
   
+        // Nếu có voucher, cập nhật trạng thái voucher
+        if (appliedVoucher) {
+          await fetch(
+            `${BASE_URL}/api/vouchers/${voucherInput.trim().toUpperCase()}/use`,
+            {
+              method: "PUT",
+              headers: { "Content-Type": "application/json" },
+            }
+          );
+        }
+  
+        Alert.alert(
+          "Đặt hàng thành công",
+          "Đơn hàng của bạn đã được gửi và đang được xử lý."
+        );
+        
         clearCart();
         navigation.replace("OrderTracking");
       } else if (paymentMethod === "card") {

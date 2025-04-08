@@ -16,7 +16,7 @@ export default function AccountSettingsScreen({ navigation }) {
       navigation.navigate("ReviewScreen");
     } else if (label === "Đăng xuất") {
       try {
-        const response = await fetch("http://1192.168.1.28:5000/api/auth/logout", {
+        const response = await fetch("http://192.168.1.28:5000/api/auth/logout", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
         });
