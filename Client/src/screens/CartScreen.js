@@ -123,7 +123,7 @@ export default function CartScreen({ navigation }) {
         {/* Danh sách sản phẩm */}
         <FlatList
           data={cartItems}
-          keyExtractor={(item) => String(item.id)}
+          keyExtractor={(item) => item._id.toString()}
           renderItem={renderItem}
           ListEmptyComponent={
             <Text className="text-gray-500 mt-2">Giỏ hàng của bạn đang trống.</Text>

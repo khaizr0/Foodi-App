@@ -31,12 +31,13 @@ export default function ProductDetailScreen({ route, navigation }) {
   const toggleTopping = (topping) => {
     const isSelected = selectedToppings.some((t) => t.id === topping.id);
     if (isSelected) {
-      // Bỏ chọn
+      console.log("Bỏ chọn topping:", topping);
       setSelectedToppings((prev) => prev.filter((t) => t.id !== topping.id));
     } else {
-      // Chọn
+      console.log("Chọn topping:", topping);
       setSelectedToppings((prev) => [...prev, topping]);
     }
+    console.log("Selected Toppings:", selectedToppings);
   };
 
   // Tính tổng giá topping đã chọn
@@ -62,6 +63,7 @@ export default function ProductDetailScreen({ route, navigation }) {
   };
 
   const handleAddToCart = () => {
+    console.log("handleAddToCart - product:", product, "quantity:", quantity, "selectedToppings:", selectedToppings);
     addToCart({ ...product, selectedToppings }, quantity);
     navigation.navigate("MainTabs", { screen: "Cart" });
   };
@@ -115,7 +117,13 @@ export default function ProductDetailScreen({ route, navigation }) {
           {/* Chọn số lượng */}
           <View className="flex-row items-center mb-6">
             <TouchableOpacity
-              onPress={() => setQuantity((prev) => Math.max(1, prev - 1))}
+              onPress={() => {
+                setQuantity((prev) => {
+                  const newQty = Math.max(1, prev - 1);
+                  console.log("Giảm số lượng:", newQty);
+                  return newQty;
+                });
+              }}
               className="bg-gray-200 px-4 py-2 rounded-l"
             >
               <Text className="text-xl font-bold">-</Text>
@@ -124,7 +132,13 @@ export default function ProductDetailScreen({ route, navigation }) {
               {quantity}
             </Text>
             <TouchableOpacity
-              onPress={() => setQuantity((prev) => prev + 1)}
+              onPress={() => {
+                setQuantity((prev) => {
+                  const newQty = prev + 1;
+                  console.log("Tăng số lượng:", newQty);
+                  return newQty;
+                });
+              }}
               className="bg-gray-200 px-4 py-2 rounded-r"
             >
               <Text className="text-xl font-bold">+</Text>
