@@ -573,28 +573,48 @@ app.get('/api/orders/my-orders', async (req, res) => {
 app.put('/api/orders/:id/cancel', async (req, res) => {
   try {
     const orderId = req.params.id;
+    console.log('Đang xử lý hủy đơn hàng với ID:', orderId);
+
+    // (Tuỳ chọn) Kiểm tra người dùng đã đăng nhập hay chưa
+    if (!req.session.user) {
+      console.log("Người dùng chưa đăng nhập");
+      return res.status(401).json({ error: 'Bạn chưa đăng nhập' });
+    }
 
     // Kiểm tra định dạng ObjectId hợp lệ
     if (!ObjectId.isValid(orderId)) {
+      console.log('ID đơn hàng không hợp lệ:', orderId);
       return res.status(400).json({ error: 'ID đơn hàng không hợp lệ' });
     }
 
     // Tìm đơn hàng theo ID
     const order = await Order.findById(orderId);
+    console.log('Đơn hàng tìm được:', order);
     if (!order) {
+      console.log('Không tìm thấy đơn hàng với ID:', orderId);
       return res.status(404).json({ error: 'Không tìm thấy đơn hàng' });
     }
 
+    // (Tuỳ chọn) Kiểm tra xem người dùng hiện tại có phải là chủ đơn hàng không
+    if (req.session.user.userId !== order.userId.toString()) {
+      console.log("Người dùng không được phép hủy đơn hàng của người khác");
+      return res.status(403).json({ error: 'Bạn không có quyền hủy đơn hàng này' });
+    }
+
     // Kiểm tra trạng thái đơn hàng có thể huỷ được hay không
+    console.log('Trạng thái đơn hàng hiện tại:', order.status);
     if (order.status === 'Hoàn thành' || order.status === 'Đã hủy') {
+      console.log('Không thể hủy đơn hàng vì trạng thái:', order.status);
       return res.status(400).json({ error: 'Đơn hàng đã hoàn thành hoặc đã bị hủy, không thể hủy lại' });
     }
 
-    // Cập nhật trạng thái đơn hàng
+    // Cập nhật trạng thái đơn hàng thành "Đã hủy"
     order.status = 'Đã hủy';
     order.updatedAt = Date.now();
+    console.log('Cập nhật đơn hàng thành:', order);
     await order.save();
 
+    console.log('Hủy đơn hàng thành công:', order);
     res.json({ message: 'Đơn hàng đã được hủy thành công', order });
   } catch (err) {
     console.error('Lỗi khi hủy đơn hàng:', err);

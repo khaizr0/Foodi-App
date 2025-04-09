@@ -1,29 +1,31 @@
-import React, { useEffect, useState } from "react";
+import React, { useState, useCallback } from "react";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { View, Text, FlatList, TouchableOpacity } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import axios from "axios";
+import { useFocusEffect } from "@react-navigation/native";
 
 export default function OrderStatusScreen({ navigation }) {
   const [orders, setOrders] = useState([]);
 
-  useEffect(() => {
-    axios.defaults.withCredentials = true;
+  const fetchOrders = async () => {
+    try {
+      axios.defaults.withCredentials = true;
+      const response = await axios.get("http://10.0.2.2:5000/api/orders/my-orders");
+      setOrders(response.data);
+    } catch (error) {
+      console.error(
+        "Lỗi khi lấy danh sách đơn hàng:",
+        error.response?.data || error.message
+      );
+    }
+  };
 
-    const fetchOrders = async () => {
-      try {
-        const response = await axios.get("http://10.0.2.2:5000/api/orders/my-orders");
-        setOrders(response.data);
-      } catch (error) {
-        console.error(
-          "Lỗi khi lấy danh sách đơn hàng:",
-          error.response?.data || error.message
-        );
-      }
-    };
-
-    fetchOrders();
-  }, []);
+  useFocusEffect(
+    useCallback(() => {
+      fetchOrders();
+    }, [])
+  );
 
   const renderOrder = ({ item }) => (
     <TouchableOpacity
@@ -58,11 +60,7 @@ export default function OrderStatusScreen({ navigation }) {
         </TouchableOpacity>
         <Text className="text-2xl font-bold text-red-500">Đơn Mua</Text>
       </View>
-      <FlatList
-        data={orders}
-        keyExtractor={(item) => item._id}
-        renderItem={renderOrder}
-      />
+      <FlatList data={orders} keyExtractor={(item) => item._id} renderItem={renderOrder} />
     </SafeAreaView>
   );
 }

@@ -4,40 +4,62 @@ import {
   View,
   Text,
   TouchableOpacity,
-  Image,
   ScrollView,
   Alert,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
-import axios from "axios";
 
 export default function OrderDetailScreen({ route, navigation }) {
   const { order } = route.params;
+  console.log("Order nhận được từ route:", order);
 
   const handleCancelOrder = async () => {
-    Alert.alert("Hủy đơn hàng", "Bạn có chắc chắn muốn hủy đơn hàng này không?", [
-      { text: "Không", style: "cancel" },
-      {
-        text: "Có",
-        style: "destructive",
-        onPress: async () => {
-          try {
-            const response = await axios.patch(
-              `http://10.0.2.2:5000/api/orders/${order._id}/cancel`,
-              {},
-              { withCredentials: true }
-            );
-            Alert.alert("Đã hủy đơn hàng thành công");
-            navigation.goBack();
-          } catch (error) {
-            console.error("Lỗi khi hủy đơn hàng:", error);
-            Alert.alert("Không thể hủy đơn hàng", "Vui lòng thử lại sau.");
-          }
+    Alert.alert(
+      "Hủy đơn hàng",
+      "Bạn có chắc chắn muốn hủy đơn hàng này không?",
+      [
+        { text: "Không", style: "cancel" },
+        {
+          text: "Có",
+          style: "destructive",
+          onPress: async () => {
+            try {
+              const orderId = order._id;
+              console.log("Đang hủy đơn hàng với id:", orderId);
+
+              const response = await fetch(
+                `http://10.0.2.2:5000/api/orders/${orderId}/cancel`,
+                {
+                  method: "PUT",
+                  credentials: "include",
+                  headers: {
+                    "Content-Type": "application/json",
+                  },
+                  body: JSON.stringify({}),
+                }
+              );
+
+              if (!response.ok) {
+                const errorData = await response.json();
+                throw new Error(errorData.error || "Không thể hủy đơn hàng");
+              }
+
+              const responseData = await response.json();
+              console.log("Kết quả hủy đơn hàng:", responseData);
+              Alert.alert("Đã hủy đơn hàng thành công");
+              navigation.goBack();
+            } catch (error) {
+              console.error("Lỗi khi hủy đơn hàng:", error.message);
+              Alert.alert(
+                "Không thể hủy đơn hàng",
+                error.message || "Vui lòng thử lại sau."
+              );
+            }
+          },
         },
-      },
-    ]);
+      ]
+    );
   };
-  
 
   return (
     <SafeAreaView className="flex-1 bg-gray-100">
@@ -60,7 +82,9 @@ export default function OrderDetailScreen({ route, navigation }) {
 
             {item.toppings?.length > 0 && (
               <View className="mt-2">
-                <Text className="text-base text-gray-700 font-semibold">Toppings:</Text>
+                <Text className="text-base text-gray-700 font-semibold">
+                  Toppings:
+                </Text>
                 {item.toppings.map((topping, idx) => (
                   <Text key={idx} className="text-gray-600 text-base">
                     + {topping.name} (${topping.price?.toFixed(2) || "0.00"})
@@ -70,33 +94,53 @@ export default function OrderDetailScreen({ route, navigation }) {
             )}
 
             <View className="mt-2 flex-row justify-between">
-              <Text className="text-base text-gray-600">Số lượng: {item.quantity}</Text>
-              <Text className="text-lg font-bold text-red-500">{item.price.toLocaleString()}đ</Text>
+              <Text className="text-base text-gray-600">
+                Số lượng: {item.quantity}
+              </Text>
+              <Text className="text-lg font-bold text-red-500">
+                {item.price.toLocaleString()}đ
+              </Text>
             </View>
           </View>
         ))}
 
         {/* Thông tin đơn hàng */}
         <View className="bg-white p-4 rounded-lg shadow-md mt-4">
-          <Text className="text-lg font-semibold text-gray-800 mb-2">Thông tin đơn hàng</Text>
+          <Text className="text-lg font-semibold text-gray-800 mb-2">
+            Thông tin đơn hàng
+          </Text>
 
           <Text className="text-base text-gray-600 mb-1">
-            Mã đơn hàng: <Text className="font-bold text-gray-800">{order.orderCode}</Text>
+            Mã đơn hàng:{" "}
+            <Text className="font-bold text-gray-800">{order.orderCode}</Text>
           </Text>
           <Text className="text-base text-gray-600 mb-1">
-            Ngày đặt hàng: <Text className="font-bold text-gray-800">{new Date(order.orderTime).toLocaleString()}</Text>
+            Ngày đặt hàng:{" "}
+            <Text className="font-bold text-gray-800">
+              {new Date(order.orderTime).toLocaleString()}
+            </Text>
           </Text>
           <Text className="text-base text-gray-600 mb-1">
-            Trạng thái: <Text className="font-bold text-blue-500">{order.status}</Text>
+            Trạng thái:{" "}
+            <Text className="font-bold text-blue-500">{order.status}</Text>
           </Text>
           <Text className="text-base text-gray-600 mb-1">
-            Địa chỉ giao hàng: <Text className="font-bold text-gray-800">{order.customer.address}</Text>
+            Địa chỉ giao hàng:{" "}
+            <Text className="font-bold text-gray-800">
+              {order.customer.address}
+            </Text>
           </Text>
           <Text className="text-base text-gray-600 mb-1">
-            Khách hàng: <Text className="font-bold text-gray-800">{order.customer.name}</Text>
+            Khách hàng:{" "}
+            <Text className="font-bold text-gray-800">
+              {order.customer.name}
+            </Text>
           </Text>
           <Text className="text-base text-gray-600 mb-1">
-            Ghi chú: <Text className="italic text-gray-700">{order.notes || "Không có"}</Text>
+            Ghi chú:{" "}
+            <Text className="italic text-gray-700">
+              {order.notes || "Không có"}
+            </Text>
           </Text>
         </View>
 
@@ -115,7 +159,9 @@ export default function OrderDetailScreen({ route, navigation }) {
           onPress={handleCancelOrder}
           className="bg-red-500 p-4 rounded-full mx-4 mb-4 items-center shadow-md"
         >
-          <Text className="text-white text-lg font-semibold">Hủy đơn hàng</Text>
+          <Text className="text-white text-lg font-semibold">
+            Hủy đơn hàng
+          </Text>
         </TouchableOpacity>
       )}
     </SafeAreaView>
