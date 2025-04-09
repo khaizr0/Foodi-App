@@ -128,6 +128,16 @@ const storeAddressSchema = new mongoose.Schema({
 });
 const StoreAddressInfo = mongoose.model('StoreAddressInfo', storeAddressSchema, 'StoreAddressInfo');
 
+// Schema cho Review
+const reviewSchema = new mongoose.Schema({
+  userId: { type: mongoose.Schema.Types.ObjectId, ref: 'Account', required: true },
+  foodId: { type: mongoose.Schema.Types.ObjectId, ref: 'Food', required: true },
+  orderId: { type: mongoose.Schema.Types.ObjectId, ref: 'Order', required: true },
+  rating: { type: Number, required: true, min: 1, max: 5 },
+  reviewText: { type: String },
+  createdAt: { type: Date, default: Date.now }
+});
+const Review = mongoose.model('Review', reviewSchema);
 
 // API cho món ăn (giữ nguyên)
 app.get('/api/foods', async (req, res) => {
@@ -709,6 +719,78 @@ app.delete('/api/addresses/:id', async (req, res) => {
     res.json({ message: 'Đã xóa địa chỉ thành công' });
   } catch (err) {
     res.status(500).json({ error: err.message });
+  }
+});
+
+app.post('/api/reviews', async (req, res) => {
+  if (!req.session.user || !req.session.user.userId) {
+    return res.status(401).json({ error: 'Bạn chưa đăng nhập' });
+  }
+  const { orderId, foodId, rating, reviewText } = req.body;
+  try {
+    // Kiểm tra đơn hàng của user có trạng thái "Hoàn thành" hay không
+    const order = await Order.findOne({ _id: orderId, userId: req.session.user.userId, status: 'Hoàn thành' });
+    if (!order) {
+      return res.status(400).json({ error: 'Không tìm thấy đơn hàng đã giao hoặc đơn hàng không thuộc về bạn' });
+    }
+    // Kiểm tra xem đơn hàng có chứa món ăn đó hay không
+    const itemExists = order.items.some(item => item._id.toString() === foodId);
+    if (!itemExists) {
+      return res.status(400).json({ error: 'Món ăn không tồn tại trong đơn hàng này' });
+    }
+    // Kiểm tra đã review chưa
+    const existingReview = await Review.findOne({ orderId, foodId, userId: req.session.user.userId });
+    if (existingReview) {
+      return res.status(400).json({ error: 'Bạn đã đánh giá món ăn này rồi' });
+    }
+    const newReview = new Review({
+      userId: req.session.user.userId,
+      orderId,
+      foodId,
+      rating,
+      reviewText,
+    });
+    const savedReview = await newReview.save();
+    res.status(201).json(savedReview);
+  } catch (err) {
+    res.status(500).json({ error: err.message || 'Lỗi server khi gửi đánh giá' });
+  }
+});
+
+app.get('/api/reviews/available', async (req, res) => {
+  if (!req.session.user || !req.session.user.userId) {
+    return res.status(401).json({ error: 'Bạn chưa đăng nhập' });
+  }
+  try {
+    const orders = await Order.find({ userId: req.session.user.userId, status: 'Hoàn thành' });
+    let items = [];
+    for (const order of orders) {
+      for (const item of order.items) {
+        // Kiểm tra xem review có tồn tại không
+        const reviewExists = await Review.findOne({ orderId: order._id, foodId: item._id, userId: req.session.user.userId });
+
+        // Nếu item.imageUrl không có, cố gắng tìm trong Food theo tên
+        let imageUrl = item.imageUrl || null;
+        if (!imageUrl) {
+          const food = await Food.findOne({ name: item.name });
+          if (food && food.imageUrl) {
+            imageUrl = food.imageUrl;
+          }
+        }
+
+        items.push({
+          orderId: order._id,
+          foodId: item._id,
+          foodName: item.name,
+          orderTime: order.orderTime,
+          imageUrl: imageUrl,
+          reviewed: reviewExists ? true : false,
+        });
+      }
+    }
+    res.json(items);
+  } catch (err) {
+    res.status(500).json({ error: err.message || 'Lỗi server khi lấy danh sách review' });
   }
 });
 

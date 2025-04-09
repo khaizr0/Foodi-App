@@ -1,23 +1,42 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { View, Text, FlatList, TouchableOpacity, Image } from "react-native";
+import { View, Text, FlatList, TouchableOpacity, Image, ActivityIndicator } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 
 export default function ReviewScreen({ navigation }) {
-  const deliveredItems = [
-    {
-      id: "1",
-      name: "Pizza Phô Mai",
-      image: require("../../assets/Product-images/pizza.png"),
-      orderDate: "2023-01-15",
-    },
-    {
-      id: "2",
-      name: "Burger Gà",
-      image: require("../../assets/Product-images/burger.png"),
-      orderDate: "2023-02-10",
-    },
-  ];
+  const [reviewItems, setReviewItems] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  const fetchReviewItems = async () => {
+    try {
+      const response = await fetch('http://10.0.2.2:5000/api/reviews/available', {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        credentials: 'include'
+      });
+      const data = await response.json();
+      if (response.ok) {
+        setReviewItems(data);
+      } else {
+        alert(data.error);
+      }
+    } catch (error) {
+      console.error("Error fetching review items", error);
+      alert("Lỗi kết nối đến server.");
+    }
+    setLoading(false);
+  };
+
+  // Gọi API mỗi khi màn hình được focus
+  useEffect(() => {
+    const unsubscribe = navigation.addListener('focus', () => {
+      setLoading(true);
+      fetchReviewItems();
+    });
+    return unsubscribe;
+  }, [navigation]);
 
   const renderItem = ({ item }) => (
     <TouchableOpacity
@@ -31,17 +50,22 @@ export default function ReviewScreen({ navigation }) {
       }}
     >
       <Image
-        source={item.image}
+        source={item.imageUrl ? { uri: item.imageUrl } : { uri: 'https://via.placeholder.com/150' }}
         style={{ width: 64, height: 64, borderRadius: 8, marginRight: 16 }}
         resizeMode="cover"
       />
       <View style={{ flex: 1 }}>
         <Text style={{ fontSize: 18, fontWeight: "600", color: "#1F2937" }}>
-          {item.name}
+          {item.foodName || "Tên món ăn"}
         </Text>
         <Text style={{ fontSize: 14, color: "#4B5563" }}>
-          Đặt hàng vào ngày {item.orderDate}
+          Đặt hàng vào ngày {new Date(item.orderTime).toLocaleDateString()}
         </Text>
+        {item.reviewed && (
+          <Text style={{ fontSize: 14, color: "green" }}>
+            Đã đánh giá
+          </Text>
+        )}
       </View>
       <Ionicons name="chevron-forward-outline" size={20} color="#374151" />
     </TouchableOpacity>
@@ -74,12 +98,23 @@ export default function ReviewScreen({ navigation }) {
         </Text>
       </View>
 
-      {/* Danh sách món đã giao */}
-      <FlatList
-        data={deliveredItems}
-        keyExtractor={(item) => item.id}
-        renderItem={renderItem}
-      />
+      {/* Danh sách món cần review */}
+      {loading ? (
+        <ActivityIndicator size="large" color="#EF4445" style={{ marginTop: 20 }} />
+      ) : (
+        <FlatList
+          data={reviewItems}
+          keyExtractor={(item) => item.orderId + "_" + item.foodId}
+          renderItem={renderItem}
+          ListEmptyComponent={
+            <View style={{ padding: 16 }}>
+              <Text style={{ textAlign: "center", color: "#4B5563" }}>
+                Không có món ăn nào.
+              </Text>
+            </View>
+          }
+        />
+      )}
     </SafeAreaView>
   );
 }
