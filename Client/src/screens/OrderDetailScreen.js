@@ -1,24 +1,43 @@
 import React from "react";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { View, Text, TouchableOpacity, ScrollView, Alert } from "react-native";
+import {
+  View,
+  Text,
+  TouchableOpacity,
+  Image,
+  ScrollView,
+  Alert,
+} from "react-native";
 import { Ionicons } from "@expo/vector-icons";
+import axios from "axios";
 
 export default function OrderDetailScreen({ route, navigation }) {
   const { order } = route.params;
 
-  const handleCancelOrder = () => {
+  const handleCancelOrder = async () => {
     Alert.alert("Hủy đơn hàng", "Bạn có chắc chắn muốn hủy đơn hàng này không?", [
       { text: "Không", style: "cancel" },
       {
         text: "Có",
         style: "destructive",
-        onPress: () => {
-          Alert.alert("Đơn hàng đã bị hủy");
-          navigation.goBack();
+        onPress: async () => {
+          try {
+            const response = await axios.patch(
+              `http://10.0.2.2:5000/api/orders/${order._id}/cancel`,
+              {},
+              { withCredentials: true }
+            );
+            Alert.alert("Đã hủy đơn hàng thành công");
+            navigation.goBack();
+          } catch (error) {
+            console.error("Lỗi khi hủy đơn hàng:", error);
+            Alert.alert("Không thể hủy đơn hàng", "Vui lòng thử lại sau.");
+          }
         },
       },
     ]);
   };
+  
 
   return (
     <SafeAreaView className="flex-1 bg-gray-100">
@@ -90,10 +109,15 @@ export default function OrderDetailScreen({ route, navigation }) {
         </View>
       </ScrollView>
 
-      {/* Nút hủy đơn */}
-      <TouchableOpacity onPress={handleCancelOrder} className="bg-red-500 p-4 rounded-full mx-4 mb-4 items-center shadow-md">
-        <Text className="text-white text-lg font-semibold">Hủy đơn hàng</Text>
-      </TouchableOpacity>
+      {/* Nút Hủy đơn hàng - chỉ hiển thị nếu đang xử lí */}
+      {order.status === "Đang xử lí" && (
+        <TouchableOpacity
+          onPress={handleCancelOrder}
+          className="bg-red-500 p-4 rounded-full mx-4 mb-4 items-center shadow-md"
+        >
+          <Text className="text-white text-lg font-semibold">Hủy đơn hàng</Text>
+        </TouchableOpacity>
+      )}
     </SafeAreaView>
   );
 }

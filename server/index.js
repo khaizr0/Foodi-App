@@ -570,6 +570,38 @@ app.get('/api/orders/my-orders', async (req, res) => {
   }
 });
 
+app.put('/api/orders/:id/cancel', async (req, res) => {
+  try {
+    const orderId = req.params.id;
+
+    // Kiểm tra định dạng ObjectId hợp lệ
+    if (!ObjectId.isValid(orderId)) {
+      return res.status(400).json({ error: 'ID đơn hàng không hợp lệ' });
+    }
+
+    // Tìm đơn hàng theo ID
+    const order = await Order.findById(orderId);
+    if (!order) {
+      return res.status(404).json({ error: 'Không tìm thấy đơn hàng' });
+    }
+
+    // Kiểm tra trạng thái đơn hàng có thể huỷ được hay không
+    if (order.status === 'Hoàn thành' || order.status === 'Đã hủy') {
+      return res.status(400).json({ error: 'Đơn hàng đã hoàn thành hoặc đã bị hủy, không thể hủy lại' });
+    }
+
+    // Cập nhật trạng thái đơn hàng
+    order.status = 'Đã hủy';
+    order.updatedAt = Date.now();
+    await order.save();
+
+    res.json({ message: 'Đơn hàng đã được hủy thành công', order });
+  } catch (err) {
+    console.error('Lỗi khi hủy đơn hàng:', err);
+    res.status(500).json({ error: 'Lỗi server khi hủy đơn hàng' });
+  }
+});
+
 // Khởi động server
 const PORT = 5000;
 app.listen(PORT, '0.0.0.0', () => {
