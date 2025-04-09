@@ -1,24 +1,30 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { View, Text, FlatList, TouchableOpacity } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
-
-const orders = [
-  {
-    id: "1",
-    orderDate: "2023-03-01",
-    status: "Đã giao",
-    total: 25.99,
-  },
-  {
-    id: "2",
-    orderDate: "2023-03-05",
-    status: "Đang xử lý",
-    total: 15.49,
-  },
-];
+import axios from "axios";
 
 export default function OrderStatusScreen({ navigation }) {
+  const [orders, setOrders] = useState([]);
+
+  useEffect(() => {
+    axios.defaults.withCredentials = true;
+
+    const fetchOrders = async () => {
+      try {
+        const response = await axios.get("http://10.0.2.2:5000/api/orders/my-orders");
+        setOrders(response.data);
+      } catch (error) {
+        console.error(
+          "Lỗi khi lấy danh sách đơn hàng:",
+          error.response?.data || error.message
+        );
+      }
+    };
+
+    fetchOrders();
+  }, []);
+
   const renderOrder = ({ item }) => (
     <TouchableOpacity
       onPress={() => navigation.navigate("OrderDetailScreen", { order: item })}
@@ -26,14 +32,16 @@ export default function OrderStatusScreen({ navigation }) {
     >
       <View className="flex-row justify-between">
         <Text className="text-lg font-semibold text-gray-800">
-          Đơn hàng #{item.id}
+          Đơn hàng #{item.orderCode || item._id}
         </Text>
-        <Text className="text-sm text-gray-600">{item.orderDate}</Text>
+        <Text className="text-sm text-gray-600">
+          {new Date(item.orderTime).toLocaleDateString()}
+        </Text>
       </View>
       <View className="flex-row justify-between mt-2">
         <Text className="text-base text-gray-800">{item.status}</Text>
         <Text className="text-base font-bold text-red-500">
-          ${item.total.toFixed(2)}
+          ${item.priceDetails?.total.toFixed(2)}
         </Text>
       </View>
       <View className="mt-2">
@@ -45,15 +53,16 @@ export default function OrderStatusScreen({ navigation }) {
   return (
     <SafeAreaView className="flex-1 bg-white">
       <View className="p-4 border-b border-gray-200 flex-row items-center">
-        <TouchableOpacity 
-          onPress={() => navigation.goBack()} 
-          className="mr-4"
-        >
+        <TouchableOpacity onPress={() => navigation.goBack()} className="mr-4">
           <Ionicons name="arrow-back" size={24} color="black" />
         </TouchableOpacity>
         <Text className="text-2xl font-bold text-red-500">Đơn Mua</Text>
       </View>
-      <FlatList data={orders} keyExtractor={(item) => item.id} renderItem={renderOrder} />
+      <FlatList
+        data={orders}
+        keyExtractor={(item) => item._id}
+        renderItem={renderOrder}
+      />
     </SafeAreaView>
   );
 }

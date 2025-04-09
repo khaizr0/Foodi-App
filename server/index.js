@@ -68,6 +68,7 @@ const Food = mongoose.model('Food', foodSchema);
 const accountSchema = new mongoose.Schema({
   username: { type: String, required: true },
   email: { type: String, required: true, unique: true },
+  phone: { type: String, default: "" },
   password: { type: String, required: true },
   role: { type: String, enum: ['customer', 'employee', 'admin'], default: 'customer' },
 });
@@ -76,6 +77,7 @@ const Account = mongoose.model('Account', accountSchema, 'accounts');
 // Schema cho đơn hàng
 const orderSchema = new mongoose.Schema({
   orderId: { type: String, unique: true },
+  userId: { type: mongoose.Schema.Types.ObjectId, ref: 'Account', required: true },
   customer: {
     name: { type: String, required: true },
     phone: { type: String, required: true },
@@ -173,6 +175,7 @@ app.post('/api/auth/register', async (req, res) => {
     const newAccount = new Account({
       username,
       email,
+      phone:"",
       password: hashedPassword,
       role: role || 'customer',
     });
@@ -207,7 +210,7 @@ app.post('/api/auth/login', async (req, res) => {
 
     res.json({
       message: 'Đăng nhập thành công',
-      account: { email: account.email, role: account.role }
+      account: { email: account.email, role: account.role, userID: account._id }
     });
   } catch (err) {
     res.status(500).json({ error: err.message || 'Lỗi server khi đăng nhập' });
@@ -455,21 +458,25 @@ app.delete('/api/vouchers/:code', async (req, res) => {
 // API lấy danh sách tất cả tài khoản
 app.get('/api/accounts', async (req, res) => {
   try {
-    const accounts = await Account.find(); // Lấy tất cả tài khoản từ collection 'accounts'
+    const accounts = await Account.find();
     res.json(accounts);
   } catch (err) {
     console.error('Error fetching accounts:', err);
     res.status(500).json({ error: 'Server error' });
   }
 });
+
 // Cập nhật tài khoản
 app.put('/api/accounts/:id', async (req, res) => {
+  if (!req.session.user || req.session.user.userId !== req.params.id) {
+    return res.status(401).json({ error: 'Unauthorized: không được cập nhật tài khoản của người khác' });
+  }
   try {
-    const updatedAccount = await Account.findByIdAndUpdate(
-      req.params.id,
-      req.body,
-      { new: true, runValidators: true }
-    );
+    const updates = {
+      username: req.body.username,
+      phone: req.body.phone,
+    };
+    const updatedAccount = await Account.findByIdAndUpdate(req.params.id, updates, { new: true, runValidators: true });
     if (!updatedAccount) {
       return res.status(404).json({ error: 'Account not found' });
     }
@@ -489,6 +496,77 @@ app.delete('/api/accounts/:id', async (req, res) => {
     res.json({ message: 'Account deleted' });
   } catch (err) {
     res.status(500).json({ error: 'Server error' });
+  }
+});
+
+app.get('/api/profile-info', async (req, res) => {
+  console.log('Session hiện tại:', req.session); // ✅ Log toàn bộ session
+  console.log('Người dùng trong session:', req.session.user); // ✅ Log riêng user
+
+  if (!req.session.user || !req.session.user.userId) {
+    return res.status(401).json({ error: 'Bạn chưa đăng nhập' });
+  }
+
+  try {
+    const account = await Account.findById(req.session.user.userId);
+    if (!account) {
+      return res.status(404).json({ error: 'Không tìm thấy tài khoản' });
+    }
+    res.json({
+      userId: account._id,
+      username: account.username,
+      email: account.email,
+      phone: account.phone || '',
+    });
+  } catch (err) {
+    res.status(500).json({ error: err.message || 'Lỗi server khi lấy thông tin hồ sơ' });
+  }
+});
+
+app.put('/api/change-password', async (req, res) => {
+  const { currentPassword, newPassword } = req.body;
+  const userId = req.session?.user?.userId;
+
+  if (!userId) {
+    return res.status(401).json({ error: 'Bạn chưa đăng nhập' });
+  }
+
+  try {
+    const account = await Account.findById(userId);
+    if (!account) {
+      return res.status(404).json({ error: 'Không tìm thấy tài khoản' });
+    }
+
+    const isMatch = await bcrypt.compare(currentPassword, account.password);
+    if (!isMatch) {
+      return res.status(400).json({ error: 'Mật khẩu hiện tại không đúng' });
+    }
+
+    const hashedPassword = await bcrypt.hash(newPassword, 10);
+    account.password = hashedPassword;
+    await account.save();
+
+    res.json({ message: 'Đổi mật khẩu thành công' });
+  } catch (err) {
+    res.status(500).json({ error: err.message || 'Lỗi server' });
+  }
+});
+
+app.get('/api/orders/my-orders', async (req, res) => {
+  console.log('Session hiện tại:', req.session);
+  console.log('Người dùng trong session:', req.session.user);
+
+  if (!req.session.user || !req.session.user.userId) {
+    return res.status(401).json({ error: 'Bạn chưa đăng nhập' });
+  }
+
+  try {
+    const userId = req.session.user.userId;
+    const orders = await Order.find({ userId });
+    res.json(orders);
+  } catch (err) {
+    console.error("Lỗi khi lấy đơn hàng:", err);
+    res.status(500).json({ error: 'Lỗi máy chủ' });
   }
 });
 

@@ -14,7 +14,6 @@ import {
 import { Ionicons } from "@expo/vector-icons";
 
 export default function HomeScreen({ navigation }) {
-  // State cho tìm kiếm, lọc theo vùng và lọc theo loại thức ăn
   const [searchValue, setSearchValue] = useState("");
   const [selectedRegion, setSelectedRegion] = useState("Tất cả");
   const [selectedCategory, setSelectedCategory] = useState("");
@@ -26,7 +25,7 @@ export default function HomeScreen({ navigation }) {
   const [loading, setLoading] = useState(true);
   const [loadingMore, setLoadingMore] = useState(false);
   const [page, setPage] = useState(1);
-  const maxPages = 1; // Điều chỉnh theo số trang mà API hỗ trợ
+  const maxPages = 1;
 
   // Gọi API khi component mount hoặc khi searchValue, selectedRegion, selectedCategory thay đổi
   useEffect(() => {
@@ -38,7 +37,7 @@ export default function HomeScreen({ navigation }) {
     setLoading(true);
     try {
       // Sử dụng địa chỉ IP thích hợp cho Android Emulator: http://10.0.2.2
-      const response = await fetch("http://192.168.1.28:5000/api/foods");
+      const response = await fetch("http://10.0.2.2:5000/api/foods");
       const data = await response.json();
 
       // Lọc theo tên sản phẩm
@@ -50,7 +49,6 @@ export default function HomeScreen({ navigation }) {
       if (selectedRegion !== "Tất cả") {
         filtered = filtered.filter((item) => item.region === selectedRegion);
       }
-
       // Lọc theo loại thức ăn (category) nếu đã chọn, so sánh không phân biệt chữ hoa chữ thường
       if (selectedCategory) {
         filtered = filtered.filter((item) =>
@@ -71,7 +69,7 @@ export default function HomeScreen({ navigation }) {
     if (loadingMore || page >= maxPages) return;
     setLoadingMore(true);
     try {
-      const response = await fetch(`http://192.168.1.28:5000/api/foods?page=${page + 1}`);
+      const response = await fetch(`http://10.0.2.2:5000/api/foods?page=${page + 1}`);
       const data = await response.json();
       setProducts((prevProducts) => [...prevProducts, ...data]);
       setPage((prevPage) => prevPage + 1);

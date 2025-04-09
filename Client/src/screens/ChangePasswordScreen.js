@@ -8,15 +8,36 @@ export default function ChangePasswordScreen({ navigation }) {
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
 
-  const handleSave = () => {
+  const handleSave = async () => {
     if (newPassword !== confirmPassword) {
-      alert("Mật khẩu mới và xác nhận mật khẩu không khớp!");
+      alert("Mật khẩu mới và xác nhận không khớp!");
       return;
     }
-    // TODO: Gọi API hoặc xử lý cập nhật mật khẩu tại đây
-    alert("Đổi mật khẩu thành công!");
-    navigation.goBack();
+  
+    try {
+      const response = await fetch("http://10.0.2.2:5000/api/change-password", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify({
+          currentPassword,
+          newPassword,
+        }),
+      });
+  
+      const data = await response.json();
+  
+      if (response.ok) {
+        alert("Đổi mật khẩu thành công!");
+        navigation.goBack();
+      } else {
+        alert(data.error || "Đổi mật khẩu thất bại");
+      }
+    } catch (error) {
+      alert("Lỗi: " + error.message);
+    }
   };
+  
 
   return (
     <SafeAreaView className="flex-1 bg-white">
