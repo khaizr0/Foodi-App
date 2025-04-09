@@ -1,8 +1,33 @@
-import React from "react";
-import { ScrollView, View, Text, TouchableOpacity, Image, Alert } from "react-native";
+import React, { useState, useEffect } from "react";
+import { ScrollView, View, Text, TouchableOpacity, Alert } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 
 export default function AccountSettingsScreen({ navigation }) {
+  const [userInfo, setUserInfo] = useState({ name: "", phone: "" });
+
+  useEffect(() => {
+    const fetchUserInfo = async () => {
+      try {
+        const response = await fetch("http://10.0.2.2:5000/api/profile-info", {
+          credentials: "include",
+        });
+        if (response.ok) {
+          const data = await response.json();
+          setUserInfo({
+            name: data.username || "Người dùng",
+            phone: data.phone || "Chưa có số điện thoại",
+          });
+        } else {
+          console.log("Không thể lấy thông tin người dùng");
+        }
+      } catch (error) {
+        console.log("Lỗi khi lấy thông tin:", error.message);
+      }
+    };
+
+    fetchUserInfo();
+  }, []);
+
   const handlePress = async (label) => {
     if (label === "Đơn Mua") {
       navigation.navigate("OrderStatusScreen");
@@ -19,6 +44,7 @@ export default function AccountSettingsScreen({ navigation }) {
         const response = await fetch("http://10.0.2.2:5000/api/auth/logout", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
+          credentials: "include",
         });
         if (response.ok) {
           Alert.alert("Thông báo", "Đăng xuất thành công");
@@ -36,28 +62,13 @@ export default function AccountSettingsScreen({ navigation }) {
   return (
     <View className="flex-1 bg-white">
       <View className="bg-red-500 p-4 pt-12 flex-row items-center">
-        <View className="relative">
-          <Image
-            source={require("../../assets/icon.png")}
-            className="w-16 h-16 rounded-full border-2 border-white"
-            resizeMode="cover"
-          />
-          <TouchableOpacity
-            onPress={() => alert("Thay đổi ảnh đại diện")}
-            className="absolute bottom-0 right-0 bg-white p-1 rounded-full"
-          >
-            <Ionicons name="camera-outline" size={16} color="#333" />
-          </TouchableOpacity>
-        </View>
         <View className="ml-4">
-          <Text className="text-white text-xl font-bold">Adam Stoeme</Text>
-          <Text className="text-white text-sm mt-1">+21355555550</Text>
+          <Text className="text-white text-xl font-bold">{userInfo.name}</Text>
+          <Text className="text-white text-sm mt-1">{userInfo.phone}</Text>
         </View>
       </View>
 
-      {/* Nội dung tùy chọn */}
       <ScrollView contentContainerStyle={{ flexGrow: 1 }} className="bg-white p-4">
-        {/* Đơn Mua */}
         <TouchableOpacity
           onPress={() => handlePress("Đơn Mua")}
           className="flex-row items-center bg-gray-200 p-4 rounded-lg mb-4 shadow-md"
@@ -67,7 +78,6 @@ export default function AccountSettingsScreen({ navigation }) {
           <Ionicons name="chevron-forward-outline" size={20} color="#374151" />
         </TouchableOpacity>
 
-        {/* Quản lý địa chỉ giao hàng */}
         <TouchableOpacity
           onPress={() => handlePress("Quản lý địa chỉ")}
           className="flex-row items-center bg-gray-200 p-4 rounded-lg mb-4 shadow-md"
@@ -77,7 +87,6 @@ export default function AccountSettingsScreen({ navigation }) {
           <Ionicons name="chevron-forward-outline" size={20} color="#374151" />
         </TouchableOpacity>
 
-        {/* Đánh giá món ăn */}
         <TouchableOpacity
           onPress={() => handlePress("Đánh giá món ăn")}
           className="flex-row items-center bg-gray-200 p-4 rounded-lg mb-4 shadow-md"
@@ -87,7 +96,6 @@ export default function AccountSettingsScreen({ navigation }) {
           <Ionicons name="chevron-forward-outline" size={20} color="#374151" />
         </TouchableOpacity>
 
-        {/* Đổi mật khẩu */}
         <TouchableOpacity
           onPress={() => handlePress("Đổi mật khẩu")}
           className="flex-row items-center bg-gray-200 p-4 rounded-lg mb-4 shadow-md"
@@ -97,7 +105,6 @@ export default function AccountSettingsScreen({ navigation }) {
           <Ionicons name="chevron-forward-outline" size={20} color="#374151" />
         </TouchableOpacity>
 
-        {/* Cập nhật hồ sơ */}
         <TouchableOpacity
           onPress={() => handlePress("Cập nhật hồ sơ")}
           className="flex-row items-center bg-gray-200 p-4 rounded-lg mb-4 shadow-md"
@@ -107,7 +114,6 @@ export default function AccountSettingsScreen({ navigation }) {
           <Ionicons name="chevron-forward-outline" size={20} color="#374151" />
         </TouchableOpacity>
 
-        {/* Đăng xuất */}
         <TouchableOpacity
           onPress={() => handlePress("Đăng xuất")}
           className="bg-red-500 p-4 rounded-full mt-6 shadow-md"

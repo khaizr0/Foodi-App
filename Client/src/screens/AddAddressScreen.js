@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { View, Text, TextInput, TouchableOpacity } from "react-native";
+import { View, Text, TextInput, TouchableOpacity, Alert } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
 
@@ -9,9 +9,35 @@ export default function AddAddressScreen({ navigation }) {
   const [address, setAddress] = useState("");
 
   const handleSave = () => {
-    // TODO: Gọi API hoặc cập nhật context để lưu địa chỉ mới
-    alert("Đã thêm địa chỉ mới!");
-    navigation.goBack();
+    console.log("Bắt đầu gọi API POST với dữ liệu:", { name, phone, address });
+    fetch("http://10.0.2.2:5000/api/addresses", {
+      method: "POST",
+      credentials: "include",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ name, phone, address }),
+    })
+      .then((response) => {
+        console.log("Phản hồi từ server:", response);
+        if (!response.ok) {
+          // Log response text trước khi throw lỗi
+          response.text().then((text) => {
+            console.log("Response text:", text);
+          });
+          throw new Error("Lỗi khi thêm địa chỉ");
+        }
+        return response.json();
+      })
+      .then((data) => {
+        console.log("Dữ liệu trả về:", data);
+        Alert.alert("Thông báo", "Đã thêm địa chỉ mới!");
+        navigation.goBack();
+      })
+      .catch((error) => {
+        console.error("Chi tiết lỗi:", error);
+        Alert.alert("Lỗi", "Có lỗi xảy ra khi thêm địa chỉ");
+      });
   };
 
   return (
@@ -24,8 +50,6 @@ export default function AddAddressScreen({ navigation }) {
           Thêm địa chỉ mới
         </Text>
       </View>
-
-      {/* Form nhập địa chỉ */}
       <View className="p-4">
         <View className="mb-4">
           <Text className="text-base font-semibold text-gray-800 mb-1">

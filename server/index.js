@@ -119,6 +119,16 @@ const voucherSchema = new mongoose.Schema({
 });
 const Voucher = mongoose.model('Voucher', voucherSchema);
 
+// Schema cho Địa chỉ
+const storeAddressSchema = new mongoose.Schema({
+  userid: { type: mongoose.Schema.Types.ObjectId, ref: 'Account', required: true },
+  name: { type: String, required: true },
+  phone: { type: String, required: true },
+  address: { type: String, required: true }
+});
+const StoreAddressInfo = mongoose.model('StoreAddressInfo', storeAddressSchema, 'StoreAddressInfo');
+
+
 // API cho món ăn (giữ nguyên)
 app.get('/api/foods', async (req, res) => {
   try {
@@ -619,6 +629,86 @@ app.put('/api/orders/:id/cancel', async (req, res) => {
   } catch (err) {
     console.error('Lỗi khi hủy đơn hàng:', err);
     res.status(500).json({ error: 'Lỗi server khi hủy đơn hàng' });
+  }
+});
+
+app.post('/api/addresses', async (req, res) => {
+  if (!req.session.user) {
+    return res.status(401).json({ error: 'Bạn chưa đăng nhập' });
+  }
+  const userId = req.session.user.userId; 
+  const { name, phone, address } = req.body;
+  try {
+    const newAddress = new StoreAddressInfo({
+      userid: userId,
+      name,
+      phone,
+      address
+    });
+    await newAddress.save();
+    res.status(201).json(newAddress);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+app.get('/api/addresses', async (req, res) => {
+  if (!req.session.user) {
+    return res.status(401).json({ error: 'Bạn chưa đăng nhập' });
+  }
+  const userId = req.session.user.userId;
+  try {
+    const addresses = await StoreAddressInfo.find({ userid: userId });
+    res.json(addresses);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+app.put('/api/addresses/:id', async (req, res) => {
+  if (!req.session.user) {
+    return res.status(401).json({ error: 'Bạn chưa đăng nhập' });
+  }
+  const userId = req.session.user.userId; // ✅ sửa lại dòng này
+  const { id } = req.params;
+  const { name, phone, address } = req.body;
+
+  try {
+    const updatedAddress = await StoreAddressInfo.findOneAndUpdate(
+      { _id: id, userid: userId },
+      { name, phone, address },
+      { new: true }
+    );
+    if (!updatedAddress) {
+      return res
+        .status(404)
+        .json({ error: 'Địa chỉ không tồn tại hoặc không thuộc về bạn' });
+    }
+    res.json(updatedAddress);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+app.delete('/api/addresses/:id', async (req, res) => {
+  if (!req.session.user) {
+    return res.status(401).json({ error: 'Bạn chưa đăng nhập' });
+  }
+  const userId = req.session.user.userId; // ✅ sửa lại dòng này
+  const { id } = req.params;
+
+  try {
+    const deletedAddress = await StoreAddressInfo.findOneAndDelete({
+      _id: id,
+      userid: userId,
+    });
+    if (!deletedAddress) {
+      return res
+        .status(404)
+        .json({ error: 'Địa chỉ không tồn tại hoặc không thuộc về bạn' });
+    }
+    res.json({ message: 'Đã xóa địa chỉ thành công' });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
   }
 });
 
