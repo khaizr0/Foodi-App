@@ -74,6 +74,7 @@ const accountSchema = new mongoose.Schema({
 });
 const Account = mongoose.model('Account', accountSchema, 'accounts');
 
+
 // Schema cho đơn hàng
 const orderSchema = new mongoose.Schema({
   orderId: { type: String, unique: true },
@@ -128,7 +129,6 @@ const toppingSchema = new mongoose.Schema({
 const Topping = mongoose.model('Topping', toppingSchema, 'toppings');
 
 
-
 // Schema cho Địa chỉ
 const storeAddressSchema = new mongoose.Schema({
   userid: { type: mongoose.Schema.Types.ObjectId, ref: 'Account', required: true },
@@ -148,6 +148,23 @@ const reviewSchema = new mongoose.Schema({
   createdAt: { type: Date, default: Date.now }
 });
 const Review = mongoose.model('Review', reviewSchema);
+
+// API: Lấy danh sách review theo foodId
+app.get('/api/reviews/:foodId', async (req, res) => {
+  try {
+    const { foodId } = req.params;
+
+    const reviews = await Review.find({ foodId })
+      .populate('userId', 'username')
+      .populate('orderId', '_id')
+      .sort({ createdAt: -1 });
+
+    res.json(reviews);
+  } catch (err) {
+    console.error('Lỗi khi lấy review theo foodId:', err.message);
+    res.status(500).json({ message: 'Lỗi server khi lấy review' });
+  }
+});
 
 // API: Lấy danh sách topping
 app.get('/api/toppings', async (req, res) => {

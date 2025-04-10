@@ -25,11 +25,11 @@ export default function ProductDetailScreen({ route, navigation }) {
         // Nếu lỗi server
         if (!response.ok) {
           const errorText = await response.text();
-          console.error("❌ Lỗi phản hồi:", response.status, errorText);
+          console.error("Lỗi phản hồi:", response.status, errorText);
           return;
         }
 
-        const data = await response.json(); // An toàn hơn .text()
+        const data = await response.json();
         const formatted = data.map((t) => ({
           id: t._id,
           name: t.name,
@@ -37,7 +37,7 @@ export default function ProductDetailScreen({ route, navigation }) {
         }));
         setToppings(formatted);
       } catch (error) {
-        console.error("❌ Lỗi khi tải topping:", error.message);
+        console.error(" Lỗi khi tải topping:", error.message);
       }
     };
 
