@@ -79,11 +79,11 @@ export default function CartScreen({ navigation }) {
 
         {/* Nút tăng/giảm số lượng */}
         <View className="flex-row items-center">
-          <TouchableOpacity onPress={() => updateQuantity(item.id, item.quantity - 1)} className="px-2">
+          <TouchableOpacity onPress={() => updateQuantity(item._id, item.quantity - 1)} className="px-2">
             <Ionicons name="remove-circle-outline" size={24} color="#EF4444" />
           </TouchableOpacity>
           <Text className="mx-2">{item.quantity}</Text>
-          <TouchableOpacity onPress={() => updateQuantity(item.id, item.quantity + 1)} className="px-2">
+          <TouchableOpacity onPress={() => updateQuantity(item._id, item.quantity + 1)} className="px-2">
             <Ionicons name="add-circle-outline" size={24} color="#EF4444" />
           </TouchableOpacity>
         </View>
@@ -95,7 +95,7 @@ export default function CartScreen({ navigation }) {
               "Bạn có chắc muốn xóa sản phẩm này khỏi giỏ hàng?",
               [
                 { text: "Hủy", style: "cancel" },
-                { text: "Xóa", onPress: () => removeFromCart(item.id) }
+                { text: "Xóa", onPress: () => removeFromCart(item._id) }
               ]
             )
           }

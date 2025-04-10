@@ -7,14 +7,15 @@ import {
   ScrollView,
   Image,
   Alert,
+  FlatList,
 } from "react-native";
 import { CartContext } from "../context/CartContext";
 
 // Địa chỉ IP cố định cho Android Emulator
-const BASE_URL = "http://192.168.1.28:5000";
+const BASE_URL = "http://10.0.2.2:5000";
 
 export default function CheckoutScreen({ navigation, route }) {
-  const { cartItems, clearCart } = useContext(CartContext);
+  const { cartItems, clearCart, user } = useContext(CartContext);
 
   // State cho thông tin đơn hàng
   const [note, setNote] = useState("");
@@ -56,11 +57,9 @@ export default function CheckoutScreen({ navigation, route }) {
 
   // Hàm xử lý áp dụng voucher
   const handleApplyVoucher = async () => {
+    console.log("Bắt đầu xử lý voucher với input:", voucherInput);
     if (appliedVoucher) {
-      Alert.alert(
-        "Voucher đã được áp dụng",
-        "Mỗi đơn hàng chỉ được nhập 1 voucher duy nhất."
-      );
+      Alert.alert("Voucher đã được áp dụng", "Mỗi đơn hàng chỉ được nhập 1 voucher duy nhất.");
       return;
     }
     if (!voucherInput.trim()) {
@@ -72,12 +71,11 @@ export default function CheckoutScreen({ navigation, route }) {
       const response = await fetch(
         `${BASE_URL}/api/vouchers/${voucherInput.trim().toUpperCase()}`
       );
+      console.log("Phản hồi từ API voucher:", response);
       const voucherData = await response.json();
+      console.log("Dữ liệu voucher nhận được:", voucherData);
       if (!response.ok) {
-        Alert.alert(
-          "Voucher không hợp lệ",
-          voucherData.error || "Voucher không tồn tại"
-        );
+        Alert.alert("Voucher không hợp lệ", voucherData.error || "Voucher không tồn tại");
         return;
       }
       if (voucherData.used) {
@@ -85,18 +83,24 @@ export default function CheckoutScreen({ navigation, route }) {
         return;
       }
       setAppliedVoucher(voucherData);
-      Alert.alert(
-        "Áp dụng voucher thành công",
-        `Voucher giảm ${voucherData.discountPercentage}% cho đơn hàng của bạn.`
-      );
+      Alert.alert("Áp dụng voucher thành công", `Voucher giảm ${voucherData.discountPercentage}% cho đơn hàng của bạn.`);
     } catch (error) {
+      console.error("Lỗi áp dụng voucher:", error);
       Alert.alert("Lỗi", `Đã xảy ra lỗi: ${error.message}`);
     }
   };
 
   // Hàm tạo object orderData
   const createOrderData = () => {
+    // Kiểm tra để đảm bảo selectedAddress có đầy đủ dữ liệu
+    if (!selectedAddress) {
+      console.error("selectedAddress không tồn tại khi tạo orderData.");
+      return null;
+    }
+    console.log("Tạo orderData với selectedAddress:", selectedAddress);
+    
     return {
+      userId: selectedAddress.userID || selectedAddress.userid || (user ? user.id : null),
       customer: {
         name: selectedAddress.name,
         phone: selectedAddress.phone,
@@ -123,65 +127,66 @@ export default function CheckoutScreen({ navigation, route }) {
       },
       notes: note,
       branch: branches.find((b) => b.id === selectedBranch),
-      status: "Đang xử lí", 
-      orderDate: new Date(),
+      status: "Đang xử lí",
+      orderTime: new Date(),
     };
   };
 
   // Hàm xử lý đặt hàng
   const handlePlaceOrder = async () => {
+    console.log("Bắt đầu đặt hàng.");
     try {
-      // Kiểm tra xem đã chọn địa chỉ chưa
-      if (!selectedAddress) {
-        Alert.alert("Lỗi", "Vui lòng chọn địa chỉ giao hàng");
+      if (!selectedAddress || !selectedAddress.name || !selectedAddress.phone || !selectedAddress.address) {
+        console.error("Dữ liệu địa chỉ không hợp lệ:", selectedAddress);
+        Alert.alert("Lỗi", "Dữ liệu địa chỉ không hợp lệ. Vui lòng kiểm tra lại");
         return;
       }
   
-      // Tạo orderData dùng chung cho cả 2 hình thức thanh toán
       const orderData = createOrderData();
+      if (!orderData) {
+        Alert.alert("Lỗi", "Dữ liệu đơn hàng không hợp lệ.");
+        return;
+      }
+      console.log("Order Data:", orderData);
   
       if (paymentMethod === "cash") {
-        // Với thanh toán bằng tiền mặt, gọi API ngay và clear cart
         const response = await fetch(`${BASE_URL}/api/orders`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify(orderData),
         });
   
+        const result = await response.json();
+  
+        console.log("Fetch response status:", response.status);
+        console.log("Fetch response body:", result);
+  
         if (!response.ok) {
-          const errorData = await response.json();
-          throw new Error(errorData.error || "Error placing order");
+          console.error("Đặt hàng thất bại:", result);
+          Alert.alert("Lỗi", result.error || "Đặt hàng thất bại!");
+          return;
         }
-  
-        // Nếu có voucher, cập nhật trạng thái voucher
-        if (appliedVoucher) {
-          await fetch(
-            `${BASE_URL}/api/vouchers/${voucherInput.trim().toUpperCase()}/use`,
-            {
-              method: "PUT",
-              headers: { "Content-Type": "application/json" },
-            }
-          );
-        }
-  
-        Alert.alert(
-          "Đặt hàng thành công",
-          "Đơn hàng của bạn đã được gửi và đang được xử lý."
-        );
         
-        clearCart();
+        if (appliedVoucher) {
+          await fetch(`${BASE_URL}/api/vouchers/${voucherInput.trim().toUpperCase()}/use`, {
+            method: "PUT",
+            headers: { "Content-Type": "application/json" },
+          });
+        }
+  
+        Alert.alert("Đặt hàng thành công", "Đơn hàng của bạn đã được gửi và đang được xử lý.");
         navigation.replace("OrderTracking");
+        clearCart();
       } else if (paymentMethod === "card") {
-        // Với thanh toán bằng QR, không clear cart ngay
-        // Chuyển sang màn hình QRPayment, truyền orderData để sau khi quét thành công mới lưu đơn hàng
         navigation.navigate("QRPayment", { orderData });
       }
     } catch (error) {
+      console.error("Order error:", error);
       Alert.alert("Lỗi", error.message);
     }
   };
-
-  // Hàm render item cho danh sách sản phẩm (giữ nguyên)
+  
+  // Hàm render item cho danh sách sản phẩm
   const renderItem = ({ item }) => {
     const toppingPrice = item.selectedToppings
       ? item.selectedToppings.reduce((sum, t) => sum + t.price, 0)
@@ -191,7 +196,7 @@ export default function CheckoutScreen({ navigation, route }) {
     return (
       <View className="flex-row items-center py-3 border-b border-gray-200">
         <Image
-          source={{ uri: item.image }}
+          source={{ uri: item.imageUrl }}
           className="w-16 h-16 mr-3 rounded-md"
           resizeMode="cover"
         />
@@ -271,7 +276,9 @@ export default function CheckoutScreen({ navigation, route }) {
               <TouchableOpacity
                 key={branch.id}
                 onPress={() => setSelectedBranch(branch.id)}
-                className={`p-3 mb-2 border rounded-lg ${selectedBranch === branch.id ? "border-red-500" : "border-gray-200"}`}
+                className={`p-3 mb-2 border rounded-lg ${
+                  selectedBranch === branch.id ? "border-red-500" : "border-gray-200"
+                }`}
               >
                 <Text className="text-gray-800 font-semibold">{branch.title}</Text>
                 <Text className="text-gray-600 text-sm">{branch.address}</Text>
@@ -280,18 +287,33 @@ export default function CheckoutScreen({ navigation, route }) {
           </ScrollView>
         </View>
 
+        {/* Danh sách sản phẩm */}
+        <Text className="text-base font-semibold text-gray-800 mb-2">Danh sách món ăn</Text>
+        <FlatList
+          data={cartItems}
+          keyExtractor={(item) => item._id.toString()}
+          renderItem={renderItem}
+          ListEmptyComponent={
+            <Text className="text-gray-500 mt-2">Giỏ hàng của bạn đang trống.</Text>
+          }
+        />
+
         <View className="mt-4">
           <Text className="text-base font-semibold text-gray-800 mb-2">Phương thức thanh toán</Text>
           <View className="flex-row">
             <TouchableOpacity
               onPress={() => setPaymentMethod("cash")}
-              className={`flex-1 p-3 mr-2 border rounded-lg ${paymentMethod === "cash" ? "border-red-500 bg-red-100" : "border-gray-200"}`}
+              className={`flex-1 p-3 mr-2 border rounded-lg ${
+                paymentMethod === "cash" ? "border-red-500 bg-red-100" : "border-gray-200"
+              }`}
             >
               <Text className="text-gray-800 font-semibold">Tiền mặt</Text>
             </TouchableOpacity>
             <TouchableOpacity
               onPress={() => setPaymentMethod("card")}
-              className={`flex-1 p-3 border rounded-lg ${paymentMethod === "card" ? "border-red-500 bg-red-100" : "border-gray-200"}`}
+              className={`flex-1 p-3 border rounded-lg ${
+                paymentMethod === "card" ? "border-red-500 bg-red-100" : "border-gray-200"
+              }`}
             >
               <Text className="text-gray-800 font-semibold">Mã QR</Text>
             </TouchableOpacity>
