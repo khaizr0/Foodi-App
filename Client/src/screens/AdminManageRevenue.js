@@ -1,103 +1,97 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { View, Text, StyleSheet, FlatList, TouchableOpacity } from 'react-native';
-import { Picker } from '@react-native-picker/picker'; 
+import { Picker } from '@react-native-picker/picker';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 
-// Dữ liệu giả định cho đơn hàng trong ngày
-const initialOrders = [
-  {
-    id: 'DH001',
-    total: 150000,
-    status: 'Hoàn thành',
-    time: '10:30 AM',
-    paymentMethod: 'Bank',
-  },
-  {
-    id: 'DH002',
-    total: 200000,
-    status: 'Hoàn thành',
-    time: '11:00 AM',
-    paymentMethod: 'Momo',
-  },
-  {
-    id: 'DH003',
-    total: 100000,
-    status: 'Đang xử lý',
-    time: '11:30 AM',
-    paymentMethod: 'Cash',
-  },
-  {
-    id: 'DH004',
-    total: 250000,
-    status: 'Hoàn thành',
-    time: '12:00 PM',
-    paymentMethod: 'Bank',
-  },
-];
-
 const ManageRevenue = () => {
-  // State để quản lý danh sách đơn hàng, bộ lọc và trạng thái sắp xếp
-  const [orders, setOrders] = useState(initialOrders);
-  const [filter, setFilter] = useState('All'); // Bộ lọc mặc định là "All"
-  const [sortOrder, setSortOrder] = useState('desc'); // Sắp xếp mặc định từ lớn đến bé
+  const [orders, setOrders] = useState([]);
+  const [filter, setFilter] = useState('All');
+  const [sortOrder, setSortOrder] = useState('desc');
+  const [loading, setLoading] = useState(true);
 
-  // Tính tổng doanh thu từ các đơn hàng đã hoàn thành
+  // Fetch orders from API
+  useEffect(() => {
+    const fetchOrders = async () => {
+      try {
+        const response = await fetch('http://10.0.2.2:5000/api/orders');
+        const data = await response.json();
+        // Filter only completed orders
+        const completedOrders = data.filter(order => order.status === 'Hoàn thành');
+        setOrders(completedOrders);
+        setLoading(false);
+      } catch (error) {
+        console.error('Error fetching orders:', error);
+        setLoading(false);
+      }
+    };
+
+    fetchOrders();
+  }, []);
+
+  // Calculate total revenue from completed orders
   const totalRevenue = orders
-    .filter(order => order.status === 'Hoàn thành')
-    .reduce((sum, order) => sum + order.total, 0);
+    .reduce((sum, order) => sum + order.priceDetails.total, 0);
 
-  // Hàm lọc đơn hàng theo phương thức thanh toán
+  // Filter orders by payment method
   const filterOrders = (method) => {
     setFilter(method);
     if (method === 'All') {
-      setOrders(initialOrders);
+      setOrders(orders);
     } else {
-      const filtered = initialOrders.filter(order => order.paymentMethod === method);
+      const filtered = orders.filter(order => order.paymentMethod === method);
       setOrders(filtered);
     }
   };
 
-  // Hàm sắp xếp đơn hàng theo tổng tiền
+  // Sort orders by total amount
   const sortOrders = () => {
     const newSortOrder = sortOrder === 'desc' ? 'asc' : 'desc';
     setSortOrder(newSortOrder);
 
     const sorted = [...orders].sort((a, b) => {
       if (newSortOrder === 'desc') {
-        return b.total - a.total; // Từ lớn đến bé
+        return b.priceDetails.total - a.priceDetails.total;
       } else {
-        return a.total - b.total; // Từ bé đến lớn
+        return a.priceDetails.total - b.priceDetails.total;
       }
     });
     setOrders(sorted);
   };
 
-  // Hàm render từng mục đơn hàng
+  // Render order item
   const renderOrderItem = ({ item }) => (
     <View style={styles.orderItem}>
-      <Text style={styles.orderId}>Mã đơn: {item.id}</Text>
-      <Text style={styles.orderTime}>Thời gian: {item.time}</Text>
-      <Text style={styles.orderTotal}>Tổng tiền: {item.total.toLocaleString()} VND</Text>
-      <Text style={styles.orderPayment}>Phương thức: {item.paymentMethod}</Text>
+      <Text style={styles.orderId}>Mã đơn: {item.orderId}</Text>
+      <Text style={styles.orderTime}>Thời gian: {new Date(item.orderTime).toLocaleString()}</Text>
+      <Text style={styles.orderTotal}>Tổng tiền: {item.priceDetails.total.toLocaleString()} VND</Text>
+      <Text style={styles.orderPayment}>Phương thức: {item.paymentMethod || 'Chưa xác định'}</Text>
       <Text style={styles.orderStatus}>Trạng thái: {item.status}</Text>
     </View>
   );
+
+  if (loading) {
+    return (
+      <View style={styles.container}>
+        <Text>Đang tải dữ liệu...</Text>
+      </View>
+    );
+  }
 
   return (
     <View style={styles.container}>
       {/* Header */}
       <View style={styles.header}>
-        <Text style={styles.headerTitle}>Doanh thu hôm nay</Text>
+        <Text style={styles.headerTitle}>Doanh thu từ đơn hàng hoàn thành</Text>
       </View>
 
-      {/* Tổng doanh thu */}
+      {/* Total revenue */}
       <View style={styles.totalRevenueContainer}>
         <Text style={styles.totalRevenueText}>Tổng doanh thu: {totalRevenue.toLocaleString()} VND</Text>
       </View>
 
-      {/* Bộ lọc và nút sắp xếp */}
+      {/* Filter and sort */}
       <View style={styles.filterSortContainer}>
-        {/* Bộ lọc theo phương thức thanh toán */}
+        {/* Payment method filter */}
         <View style={styles.filterContainer}>
           <Text style={styles.filterLabel}>Lọc theo phương thức: </Text>
           <Picker
@@ -112,7 +106,7 @@ const ManageRevenue = () => {
           </Picker>
         </View>
 
-        {/* Nút sắp xếp */}
+        {/* Sort button */}
         <TouchableOpacity style={styles.sortButton} onPress={sortOrders}>
           <MaterialCommunityIcons
             name={sortOrder === 'desc' ? 'sort-descending' : 'sort-ascending'}
@@ -125,18 +119,19 @@ const ManageRevenue = () => {
         </TouchableOpacity>
       </View>
 
-      {/* Danh sách đơn hàng */}
+      {/* Orders list */}
       <FlatList
         data={orders}
-        keyExtractor={item => item.id}
+        keyExtractor={item => item._id}
         renderItem={renderOrderItem}
-        ListHeaderComponent={<Text style={styles.listHeader}>Danh sách đơn hàng trong ngày</Text>}
+        ListHeaderComponent={<Text style={styles.listHeader}>Danh sách đơn hàng hoàn thành</Text>}
         ListEmptyComponent={<Text style={styles.emptyText}>Không có đơn hàng nào</Text>}
       />
     </View>
   );
 };
 
+// Styles remain the same as before
 const styles = StyleSheet.create({
   container: {
     flex: 1,

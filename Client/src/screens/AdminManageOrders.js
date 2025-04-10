@@ -10,13 +10,11 @@ const ManageOrders = () => {
   const [error, setError] = useState(null); 
   const scrollRef = useRef(null);
   const navigation = useNavigation();
-  const API_LOCAL = `http://10.0.2.2:5000`;
-  const userRole = 'admin'; 
 
   useEffect(() => {
     fetchOrders();
   }, []);
-  
+  const API_LOCAL = `http://192.168.1.28:5000`;
   const fetchOrders = async () => {
     try {
       const response = await axios.get(`${API_LOCAL}/api/orders`);
@@ -54,8 +52,7 @@ const ManageOrders = () => {
   };
 
   const renderItem = useCallback(({ item }) => {
-    const statusColor = item.status === 'Hoàn thành' ? '#32CD32' : 
-                       item.status === 'Đã hủy' ? '#FF4500' : '#FFD700';
+    const statusColor = item.status === 'Hoàn thành' ? '#32CD32' : item.status === 'Đã hủy' ? '#FF4500' : '#FFD700';
     return (
       <Card
         style={styles.card}
@@ -69,7 +66,7 @@ const ManageOrders = () => {
               Trạng thái: {item.status || 'Không có trạng thái'}
             </Text>
           </View>
-          {userRole === 'employee' && item.status === 'Đang xử lí' && (
+          {item.status === 'Đang xử lí' && (
             <Button
               mode="contained"
               onPress={() => handleConfirm(item._id, item.status)}
@@ -78,19 +75,10 @@ const ManageOrders = () => {
               Xác nhận
             </Button>
           )}
-          {userRole === 'shipper' && item.status === 'Đang chờ giao' && (
-            <Button
-              mode="contained"
-              onPress={() => handleDeliverOrder(item._id)}
-              style={styles.deliverButton}
-            >
-              Đã giao hàng
-            </Button>
-          )}
         </View>
       </Card>
     );
-  }, [navigation, userRole]);
+  }, [navigation]);
 
   const memoizedOrderList = useMemo(() => orders, [orders]);
 
@@ -175,10 +163,6 @@ const styles = StyleSheet.create({
   confirmButton: {
     marginLeft: 10,
     backgroundColor: '#4682B4',
-  },
-  deliverButton: {
-    marginLeft: 10,
-    backgroundColor: '#32CD32',
   },
 });
 
