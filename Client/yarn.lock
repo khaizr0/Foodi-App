@@ -3184,7 +3184,7 @@ expo-status-bar@~2.0.1:
 
 expo@^52.0.44:
   version "52.0.44"
-  resolved "https://registry.npmjs.org/expo/-/expo-52.0.44.tgz"
+  resolved "https://registry.yarnpkg.com/expo/-/expo-52.0.44.tgz#3e7aa0e3d373c70a328b349852b4a35867ecc930"
   integrity sha512-qj3+MWxmqLyBaYQ8jDOvVLEgSqNplH3cf+nDhxCo4C1cpTPD1u/HGh1foibtaeuCYLHsE5km1lrcOpRbFJ4luQ==
   dependencies:
     "@babel/runtime" "^7.20.0"
@@ -3425,7 +3425,7 @@ fontfaceobserver@^2.1.0:
     expo-linear-gradient "^14.0.2"
     expo-status-bar "~2.0.1"
     express "^4.21.2"
-    foodi-app "file:../../../../.cache/yarn/v6/npm-foodi-app-1.0.0-bce9cacb-c03a-4931-99d4-fef0d8cbb444-1744168940749/node_modules/foodi-app"
+    foodi-app "file:../../../../AppData/Local/Yarn/Cache/v6/npm-foodi-app-1.0.0-974b223e-8bc5-4bd9-bef5-bf4e92ad435a-1744243958559/node_modules/foodi-app"
     hoist-non-react-statics "^3.3.2"
     jsonwebtoken "^9.0.2"
     mongoose "^8.12.2"

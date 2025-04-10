@@ -31,7 +31,7 @@ export const CartProvider = ({ children }) => {
   const removeFromCart = (itemId) => {
     console.log("removeFromCart - itemId:", itemId);
     setCartItems(prevItems => {
-      const updatedItems = prevItems.filter(item => item._id !== itemId);
+      const updatedItems = prevItems.filter(item => item.id !== itemId);
       console.log("Giỏ hàng sau xóa:", updatedItems);
       return updatedItems;
     });
@@ -48,7 +48,7 @@ export const CartProvider = ({ children }) => {
     console.log("updateQuantity - itemId:", itemId, "newQuantity:", newQuantity);
     setCartItems(prevItems => {
       const updatedItems = prevItems.map(item =>
-        item._id === itemId ? { ...item, quantity: Math.max(newQuantity, 1) } : item
+        item.id === itemId ? { ...item, quantity: Math.max(newQuantity, 1) } : item
       );
       console.log("Giỏ hàng sau cập nhật số lượng:", updatedItems);
       return updatedItems;
