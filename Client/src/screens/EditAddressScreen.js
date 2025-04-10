@@ -1,18 +1,43 @@
 import React, { useState } from "react";
-import { View, Text, TextInput, TouchableOpacity } from "react-native";
+import { View, Text, TextInput, TouchableOpacity, Alert } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
 
 export default function EditAddressScreen({ route, navigation }) {
-  const { address: currentAddress } = route.params; // Dữ liệu địa chỉ cần chỉnh sửa
+  const { address: currentAddress } = route.params;
   const [name, setName] = useState(currentAddress.name);
   const [phone, setPhone] = useState(currentAddress.phone);
   const [address, setAddress] = useState(currentAddress.address);
 
   const handleSave = () => {
-    // TODO: Gọi API hoặc cập nhật context để lưu thay đổi địa chỉ
-    alert("Địa chỉ đã được cập nhật!");
-    navigation.goBack();
+    console.log("Gọi API PUT với dữ liệu:", { name, phone, address });
+    fetch(`http://10.0.2.2:5000/api/addresses/${currentAddress._id}`, {
+      method: "PUT",
+      credentials: "include",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ name, phone, address }),
+    })
+      .then((response) => {
+        console.log("Phản hồi từ API PUT:", response);
+        if (!response.ok) {
+          response.text().then((text) => {
+            console.log("Response text:", text);
+          });
+          throw new Error("Lỗi cập nhật địa chỉ");
+        }
+        return response.json();
+      })
+      .then((data) => {
+        console.log("Dữ liệu trả về từ API PUT:", data);
+        Alert.alert("Thông báo", "Địa chỉ đã được cập nhật!");
+        navigation.goBack();
+      })
+      .catch((error) => {
+        console.error("Chi tiết lỗi PUT:", error);
+        Alert.alert("Lỗi", "Có lỗi xảy ra khi cập nhật địa chỉ");
+      });
   };
 
   return (
@@ -25,8 +50,6 @@ export default function EditAddressScreen({ route, navigation }) {
           Chỉnh sửa địa chỉ
         </Text>
       </View>
-
-      {/* Form chỉnh sửa địa chỉ */}
       <View className="p-4">
         <View className="mb-4">
           <Text className="text-base font-semibold text-gray-800 mb-1">
