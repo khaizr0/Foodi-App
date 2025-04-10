@@ -119,6 +119,16 @@ const voucherSchema = new mongoose.Schema({
 });
 const Voucher = mongoose.model('Voucher', voucherSchema);
 
+// Schema cho Topping
+const toppingSchema = new mongoose.Schema({
+  idTopping: { type: String, required: true },
+  name: { type: String, required: true },
+  price: { type: Number, required: true }
+});
+const Topping = mongoose.model('Topping', toppingSchema, 'toppings');
+
+
+
 // Schema cho Địa chỉ
 const storeAddressSchema = new mongoose.Schema({
   userid: { type: mongoose.Schema.Types.ObjectId, ref: 'Account', required: true },
@@ -138,6 +148,17 @@ const reviewSchema = new mongoose.Schema({
   createdAt: { type: Date, default: Date.now }
 });
 const Review = mongoose.model('Review', reviewSchema);
+
+// API: Lấy danh sách topping
+app.get('/api/toppings', async (req, res) => {
+  try {
+    const toppings = await Topping.find();
+    res.json(toppings);
+  } catch (err) {
+    console.error('Lỗi khi tải topping:', err);
+    res.status(500).json({ error: 'Server error' });
+  }
+});
 
 // API cho món ăn (giữ nguyên)
 app.get('/api/foods', async (req, res) => {
