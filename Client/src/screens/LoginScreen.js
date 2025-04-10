@@ -19,7 +19,7 @@ export default function LoginScreen({ navigation }) {
       if (response.ok) {
         if (data.account.role === "customer") {
           navigation.replace("MainTabs");
-        } else if (data.account.role === 'admin' || data.account.role === 'employee') {
+        } else if (data.account.role === 'admin' || data.account.role === 'employee' || data.account.role === 'shipper') {
           navigation.navigate("AdminNavigator", { role: data.account.role });
         }
       } else {

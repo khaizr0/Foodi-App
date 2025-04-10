@@ -92,11 +92,13 @@ const AdminNavigator = ({ route }) => {
       })}
     >
       <Tab.Screen name="Đơn Hàng" component={OrderStack} />
-      <Tab.Screen name="Món Ăn" component={FoodStack} />
-      {role !== 'employee' && (
+      {role !== 'shipper' && (
+        <Tab.Screen name="Món Ăn" component={FoodStack} />
+      )}
+      {role !== 'employee' && role !== 'shipper' && (
         <Tab.Screen name="Tài Khoản" component={AccountStack} />
       )}
-      {role !== 'employee' && (
+      {role !== 'employee' && role !== 'shipper' && (
         <Tab.Screen name="Doanh thu" component={RevenueStack} />
       )}
     </Tab.Navigator>

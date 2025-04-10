@@ -70,7 +70,7 @@ const accountSchema = new mongoose.Schema({
   email: { type: String, required: true, unique: true },
   phone: { type: String, default: "" },
   password: { type: String, required: true },
-  role: { type: String, enum: ['customer', 'employee', 'admin'], default: 'customer' },
+  role: { type: String, enum: ['customer', 'employee', 'admin', 'shipper'], default: 'customer' },
 });
 const Account = mongoose.model('Account', accountSchema, 'accounts');
 
@@ -241,6 +241,15 @@ app.get('/api/profile', (req, res) => {
 app.get('/api/orders', async (req, res) => {
   try {
     const orders = await Order.find();
+    res.json(orders);
+  } catch (err) {
+    res.status(500).json({ error: 'Server error' });
+  }
+});
+
+app.get('/api/orders/shipper', async (req, res) => {
+  try {
+    const orders = await Order.find({ status: 'Đang chờ giao' });
     res.json(orders);
   } catch (err) {
     res.status(500).json({ error: 'Server error' });
@@ -465,6 +474,35 @@ app.get('/api/accounts', async (req, res) => {
     res.status(500).json({ error: 'Server error' });
   }
 });
+// API thêm tài khoản mới
+app.post('/api/accounts', async (req, res) => {
+  try {
+    const { username, email, phone, password, role } = req.body;
+    if (!username || !email || !phone || !password || !role) {
+      return res.status(400).json({ error: 'Vui lòng cung cấp đầy đủ username, email, phone, password và role' });
+    }
+
+    const existingAccount = await Account.findOne({ email });
+    if (existingAccount) {
+      return res.status(400).json({ error: 'Email đã được sử dụng' });
+    }
+
+    const hashedPassword = await bcrypt.hash(password, 10);
+    const newAccount = new Account({
+      username,
+      email,
+      phone,
+      password: hashedPassword,
+      role,
+    });
+
+    const savedAccount = await newAccount.save();
+    res.status(201).json(savedAccount);
+  } catch (err) {
+    console.error('Error adding account:', err); // Log lỗi chi tiết
+    res.status(500).json({ error: err.message || 'Lỗi server khi thêm tài khoản' });
+  }
+});
 
 // Cập nhật tài khoản
 app.put('/api/accounts/:id', async (req, res) => {
@@ -621,6 +659,7 @@ app.put('/api/orders/:id/cancel', async (req, res) => {
     res.status(500).json({ error: 'Lỗi server khi hủy đơn hàng' });
   }
 });
+
 
 // Khởi động server
 const PORT = 5000;

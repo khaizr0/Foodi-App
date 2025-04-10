@@ -10,7 +10,7 @@ import { useNavigation } from '@react-navigation/native';
 
 const ManageAccounts = () => {
     const [accountList, setAccountList] = useState([]);
-    const [newAccount, setNewAccount] = useState({ username: '', email: '', password: '', role: '' });
+    const [newAccount, setNewAccount] = useState({ username: '', email: '', phone: '', password: '', role: '' });
     const [editAccount, setEditAccount] = useState(null);
     const [isModalVisible, setModalVisible] = useState(false);
     const [accountToDelete, setAccountToDelete] = useState(null);
@@ -39,7 +39,7 @@ const ManageAccounts = () => {
         fetchAccounts();
     }, []);
 
-    const API_LOCAL = `http://192.168.1.28:5000`;
+    const API_LOCAL = `http://10.0.2.2:5000`;
     const fetchAccounts = async () => {
         try {
             const response = await axios.get(`${API_LOCAL}/api/accounts`);
@@ -60,26 +60,29 @@ const ManageAccounts = () => {
     }, []);
 
     const handleAddAccount = async () => {
-        if (!newAccount.username || !newAccount.email || !newAccount.password || !newAccount.role) {
-            showAlertModal('error', 'Vui lòng nhập đầy đủ thông tin bắt buộc.');
-            return;
+        if (!newAccount.username || !newAccount.email || !newAccount.phone || !newAccount.password || !newAccount.role) {
+          showAlertModal('error', 'Vui lòng nhập đầy đủ thông tin bắt buộc.');
+          return;
         }
+      
         try {
-            const response = await axios.post(`${API_LOCAL}/api/accounts`, newAccount);
-            setAccountList(prev => [response.data, ...prev]);
-            showAlertModal('success', `${newAccount.username} đã được thêm thành công!`);
-            setNewAccount({ username: '', email: '', password: '', role: '' });
-            setIsAddMode(false);
+          const response = await axios.post(`${API_LOCAL}/api/accounts`, newAccount);
+          setAccountList(prev => [response.data, ...prev]);
+          showAlertModal('success', `${newAccount.username} đã được thêm thành công!`);
+          setNewAccount({ username: '', email: '', phone: '', password: '', role: '' });
+          setIsAddMode(false);
         } catch (error) {
-            showAlertModal('error', 'Không thể thêm tài khoản.');
+          console.error('Error adding account:', error.response?.data || error.message);
+          showAlertModal('error', error.response?.data?.error || 'Không thể thêm tài khoản.');
         }
-    };
+      };
 
     const handleEditAccount = useCallback((account) => {
         setEditAccount(account);
         setNewAccount({
             username: account.username,
             email: account.email,
+            phone: account.phone,
             password: '',
             role: account.role,
         });
@@ -98,13 +101,14 @@ const ManageAccounts = () => {
             const updateData = {
                 username: newAccount.username,
                 email: newAccount.email,
+                phone: newAccount.phone,
                 role: newAccount.role,
             };
             if (newAccount.password) updateData.password = newAccount.password;
             const response = await axios.put(`${API_LOCAL}/api/accounts/${editAccount._id}`, updateData);
             setAccountList(prevAccounts => prevAccounts.map(item => (item._id === editAccount._id ? response.data : item)));
             showAlertModal('success', `${newAccount.username} đã được cập nhật thành công!`);
-            setNewAccount({ username: '', email: '', password: '', role: '' });
+            setNewAccount({ username: '', email: '', phone: '', password: '', role: '' });
             setEditAccount(null);
             setIsAddMode(false);
         } catch (error) {
@@ -151,8 +155,9 @@ const ManageAccounts = () => {
                 <View style={styles.cardText}>
                     <Text style={styles.cardTitle}>{item.username}</Text>
                     <Text style={styles.cardPrice}>{item.email}</Text>
+                    <Text style={styles.cardDescription}>Số điện thoại: {item.phone}</Text>
                     <Text style={styles.cardDescription}>Vai trò: {item.role}</Text>
-                </View>
+                </View> 
             </View>
             <Card.Actions style={styles.cardActions}>
                 <IconButton icon="pencil" color="#4682B4" onPress={() => handleEditAccount(item)} />
@@ -194,6 +199,14 @@ const ManageAccounts = () => {
                             onChangeText={(text) => handleInputChange('password', text)}
                             style={styles.input}
                             secureTextEntry
+                            theme={{ colors: { text: '#333', primary: '#4682B4' } }}
+                        />
+                        <TextInput
+                            label="Số điện thoại (*)"
+                            value={newAccount.phone}
+                            onChangeText={(text) => handleInputChange('phone', text)}
+                            style={styles.input}
+                            keyboardType="phone-pad"
                             theme={{ colors: { text: '#333', primary: '#4682B4' } }}
                         />
                         <View style={styles.pickerContainer}>
