@@ -51,6 +51,28 @@ const ManageOrders = () => {
     }
   };
 
+  const handleDelivered = async (orderId, currentStatus) => {
+    if (currentStatus !== 'Đang chờ giao') {
+      Alert.alert('Thông báo', 'Chỉ có thể đánh dấu đã giao cho đơn hàng ở trạng thái "Đang chờ giao".');
+      return;
+    }
+    try {
+      const response = await axios.put(`${API_LOCAL}/api/orders/${orderId}`, {
+        status: 'Hoàn thành'
+      });
+      console.log('Server response:', response.data);
+      setOrders((prevOrders) =>
+        prevOrders.map((order) =>
+          order._id === orderId ? { ...order, status: 'Hoàn thành' } : order
+        )
+      );
+      Alert.alert('Thành công', 'Giao hàng thành công');
+    } catch (error) {
+      console.error('Error updating order:', error.response?.data || error.message);
+      Alert.alert('Lỗi', 'Không thể cập nhật đơn hàng: ' + (error.response?.data?.message || error.message));
+    }
+  };
+
   const renderItem = useCallback(({ item }) => {
     const statusColor = item.status === 'Hoàn thành' ? '#32CD32' : item.status === 'Đã hủy' ? '#FF4500' : '#FFD700';
     return (
@@ -73,6 +95,15 @@ const ManageOrders = () => {
               style={styles.confirmButton}
             >
               Xác nhận
+            </Button>
+          )}
+          {item.status === 'Đang chờ giao' && (
+            <Button
+              mode="contained"
+              onPress={() => handleDelivered(item._id, item.status)}
+              style={styles.deliveredButton}
+            >
+              Đã giao hàng
             </Button>
           )}
         </View>
@@ -163,6 +194,10 @@ const styles = StyleSheet.create({
   confirmButton: {
     marginLeft: 10,
     backgroundColor: '#4682B4',
+  },
+  deliveredButton: {
+    marginLeft: 10,
+    backgroundColor: '#32CD32',
   },
 });
 
