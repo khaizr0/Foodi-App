@@ -1,5 +1,13 @@
 import React, { useState, useContext, useEffect } from "react";
-import { View, Text, Image, TouchableOpacity, FlatList, ScrollView, SafeAreaView } from "react-native";
+import {
+  View,
+  Text,
+  Image,
+  TouchableOpacity,
+  FlatList,
+  ScrollView,
+  SafeAreaView,
+} from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { CartContext } from "../context/CartContext";
 
@@ -8,21 +16,14 @@ export default function ProductDetailScreen({ route, navigation }) {
   const [quantity, setQuantity] = useState(1);
   const [toppings, setToppings] = useState([]);
   const [selectedToppings, setSelectedToppings] = useState([]);
+  const [reviews, setReviews] = useState([]);
   const { addToCart } = useContext(CartContext);
 
-  const [reviews] = useState([
-    { id: "1", user: "Nguyen Van A", rating: 5, comment: "Sản phẩm rất ngon, giao hàng nhanh!", date: "10/03/2025" },
-    { id: "2", user: "Tran Thi B", rating: 4, comment: "Chất lượng tốt, nhưng giao hàng hơi chậm.", date: "05/03/2025" },
-    { id: "3", user: "Le Van C", rating: 5, comment: "Đóng gói cẩn thận, món ăn vẫn nóng khi nhận được.", date: "01/03/2025" },
-  ]);
-
-  // ✅ Gọi API lấy danh sách toppings từ server
+  // Gọi API lấy danh sách toppings từ server
   useEffect(() => {
     const fetchToppings = async () => {
       try {
         const response = await fetch("http://10.0.2.2:5000/api/toppings");
-
-        // Nếu lỗi server
         if (!response.ok) {
           const errorText = await response.text();
           console.error("Lỗi phản hồi:", response.status, errorText);
@@ -37,12 +38,40 @@ export default function ProductDetailScreen({ route, navigation }) {
         }));
         setToppings(formatted);
       } catch (error) {
-        console.error(" Lỗi khi tải topping:", error.message);
+        console.error("Lỗi khi tải topping:", error.message);
       }
     };
 
     fetchToppings();
   }, []);
+
+  // Gọi API lấy đánh giá theo foodId
+  useEffect(() => {
+    const fetchReviews = async () => {
+      try {
+        const response = await fetch(`http://10.0.2.2:5000/api/reviews/${product._id}`);
+        if (!response.ok) {
+          const errorText = await response.text();
+          console.error("Lỗi phản hồi:", response.status, errorText);
+          return;
+        }
+
+        const data = await response.json();
+        const formatted = data.map((r) => ({
+          id: r._id,
+          user: r.userId?.username || "Người dùng ẩn danh",
+          rating: r.rating,
+          comment: r.reviewText || "",
+          date: new Date(r.createdAt).toLocaleDateString("vi-VN"),
+        }));
+        setReviews(formatted);
+      } catch (error) {
+        console.error("Lỗi khi tải đánh giá:", error.message);
+      }
+    };
+
+    fetchReviews();
+  }, [product._id]);
 
   const toggleTopping = (topping) => {
     const isSelected = selectedToppings.some((t) => t.id === topping.id);
@@ -92,7 +121,7 @@ export default function ProductDetailScreen({ route, navigation }) {
           <View className="flex-row items-center mb-2">
             <Ionicons name="star" size={16} color="#FBBF24" />
             <Text className="ml-1 text-sm text-gray-600">
-              {product.rating?.toFixed(1) || 4.5} ({product.reviews || 34})
+              {product.rating?.toFixed(1) || 4.5} ({reviews.length})
             </Text>
             <Text className="mx-2 text-sm text-gray-500">|</Text>
             <Text className="text-sm text-gray-600">
@@ -188,11 +217,12 @@ export default function ProductDetailScreen({ route, navigation }) {
                     {renderStars(product.rating || 4.5)}
                   </View>
                   <Text className="text-gray-600 text-sm">
-                    {product.reviews || 34} đánh giá
+                    {reviews.length} đánh giá
                   </Text>
                 </View>
               </View>
             </View>
+
             <FlatList
               data={reviews}
               keyExtractor={(item) => item.id}
@@ -218,7 +248,7 @@ export default function ProductDetailScreen({ route, navigation }) {
             {reviews.length > 0 && (
               <TouchableOpacity className="mt-2">
                 <Text className="text-center text-blue-500 font-semibold">
-                  Xem tất cả đánh giá ({product.reviews || 34})
+                  Xem tất cả đánh giá ({reviews.length})
                 </Text>
               </TouchableOpacity>
             )}
