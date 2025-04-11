@@ -11,6 +11,7 @@ import ManageAccounts from "../screens/AdminManageAccount";
 import ManageRevenue from "../screens/AdminManageRevenue";
 import FoodsDetailScreen from "../screens/FoodsDetailScreen";
 import OrdersDetailScreen from "../screens/OrdersDetailScreen";
+import AdminAccountSettings from "../screens/AdminAccountSettings";
 
 const Stack = createNativeStackNavigator();
 const Tab = createBottomTabNavigator();
@@ -53,17 +54,18 @@ const AccountStack = () => (
   </Stack.Navigator>
 );
 
+const AccountSetting = () => (
+  <Stack.Navigator>
+    <Stack.Screen name="AdminAccountSettingsScreen" component={AdminAccountSettings} options={{ headerShown: false }} />
+  </Stack.Navigator>
+);
+
 const RevenueStack = () => (
   <Stack.Navigator>
     <Stack.Screen
       name="RevenueScreen"
       component={ManageRevenue}
-      options={{
-        title: 'Doanh thu',
-        headerStyle: { backgroundColor: '#4682B4' },
-        headerTintColor: 'rgb(255,255,224)',
-        headerTitleStyle: { fontWeight: '700', fontSize: 22 },
-      }}
+      options={{ headerShown: false }}
     />
   </Stack.Navigator>
 );
@@ -80,6 +82,7 @@ const AdminNavigator = ({ route }) => {
           else if (route.name === 'Món Ăn') iconName = 'food';
           else if (route.name === 'Tài Khoản') iconName = 'account';
           else if (route.name === 'Doanh thu') iconName = 'chart-pie';
+          else if (route.name === 'Cài Đặt') iconName = 'cog-outline';
           return <MaterialCommunityIcons name={iconName} size={size} color={color} />;
         },
         tabBarActiveTintColor: '#20B2AA',
@@ -101,6 +104,7 @@ const AdminNavigator = ({ route }) => {
       {role !== 'employee' && role !== 'shipper' && (
         <Tab.Screen name="Doanh thu" component={RevenueStack} />
       )}
+      <Tab.Screen name="Cài Đặt" component={AccountSetting} />
     </Tab.Navigator>
   );
 };

@@ -170,12 +170,8 @@ const ManageAccounts = () => {
 
     return (
         <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : 'height'} style={{ flex: 1 }}>
-            <LinearGradient colors={['#F0F8FF', '#E6E6FA']} style={styles.gradient}>
-                <View style={styles.header}>
-                    <Text style={styles.headerTitle}>
-                        {isAddMode ? 'Thêm tài khoản' : 'Danh sách tài khoản'}
-                    </Text>
-                </View>
+            <LinearGradient colors={['#4A90E2', '#81C784']} style={styles.gradient}>
+            
                 {isAddMode ? (
                     <ScrollView ref={scrollRef} contentContainerStyle={styles.scrollContainer}>
                         <TextInput
@@ -352,52 +348,61 @@ const ManageAccounts = () => {
 };
 
 const styles = StyleSheet.create({
-    gradient: { flex: 1 },
-    header: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        paddingVertical: 20,
-        paddingHorizontal: 15,
-        borderBottomWidth: 1,
-        borderBottomColor: '#DCDCDC',
+    gradient: {
+        flex: 1,
+        backgroundColor: '#fff', // Để gradient nổi bật hơn
     },
-    headerTitle: {
-        fontSize: 22,
-        fontWeight: '600',
-        color: '#4682B4',
-        marginLeft: 10,
+    
+    scrollContainer: {
+        padding: 20,
+        backgroundColor: 'rgba(255, 255, 255, 0.9)', // Nền trắng mờ nhẹ
+        borderRadius: 20,
+        margin: 15,
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 5 },
+        shadowOpacity: 0.25,
+        shadowRadius: 12,
+        elevation: 10,
     },
-    scrollContainer: { padding: 25 },
     input: {
         marginBottom: 20,
-        backgroundColor: '#fff',
-        borderRadius: 10,
-        borderWidth: 1,
-        borderColor: '#DCDCDC',
+        backgroundColor: '#F0F8FF', // Màu xanh nhạt dịu
+        borderRadius: 15,
+        borderWidth: 2,
+        borderColor: '#20B2AA', // Xanh ngọc
         paddingHorizontal: 15,
         fontSize: 16,
+        color: '#333',
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 3 },
+        shadowOpacity: 0.2,
+        shadowRadius: 6,
     },
     submitButton: {
-        marginVertical: 15,
-        borderRadius: 10,
-        backgroundColor: '#4682B4',
-        paddingVertical: 8,
-        elevation: 2,
+        marginVertical: 10,
+        borderRadius: 15,
+        backgroundColor: '#20B2AA', // Xanh ngọc đậm
+        paddingVertical: 10,
+        elevation: 6,
     },
     cancelButton: {
-        marginVertical: 15,
-        borderRadius: 10,
-        borderColor: '#4682B4',
-        borderWidth: 1,
+        marginVertical: 10,
+        borderRadius: 15,
+        borderColor: '#DDA853', // Đỏ cam
+        borderWidth: 2,
         backgroundColor: 'transparent',
-        paddingVertical: 8,
+        paddingVertical: 10,
     },
     card: {
         marginVertical: 10,
-        marginHorizontal: 20,
-        borderRadius: 10,
-        backgroundColor: '#fff',
-        elevation: 3,
+        marginHorizontal: 15,
+        borderRadius: 20,
+        backgroundColor: '#FFF8DC', // Màu ngà nhẹ
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 6 },
+        shadowOpacity: 0.3,
+        shadowRadius: 12,
+        elevation: 8,
     },
     cardContent: {
         flexDirection: 'row',
@@ -406,14 +411,15 @@ const styles = StyleSheet.create({
     },
     cardText: { flex: 1 },
     cardTitle: {
-        fontSize: 18,
-        fontWeight: '600',
+        fontSize: 22,
+        fontWeight: '800',
         color: '#333',
     },
     cardPrice: {
-        fontSize: 16,
-        color: '#4682B4',
-        marginVertical: 5,
+        fontSize: 18,
+        fontWeight: '700',
+        color: '#FF5733', // Đỏ cam nổi bật
+        marginVertical: 6,
     },
     cardDescription: {
         fontSize: 14,
@@ -426,22 +432,26 @@ const styles = StyleSheet.create({
     },
     pickerContainer: { marginBottom: 20 },
     pickerLabel: {
-        fontSize: 16,
+        fontSize: 18,
+        fontWeight: '700',
+        color: '#DAA520', // Vàng cam đậm
         marginBottom: 8,
-        color: '#333',
-        fontWeight: '500',
     },
     picker: {
-        backgroundColor: '#fff',
-        borderRadius: 10,
-        borderWidth: 1,
-        borderColor: '#DCDCDC',
+        backgroundColor: '#F0FFF0', // Xanh lá nhạt
+        borderRadius: 15,
+        borderWidth: 2,
+        borderColor: '#81C784', // Xanh lá sáng
         color: '#333',
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 3 },
+        shadowOpacity: 0.2,
+        shadowRadius: 6,
     },
     addButton: {
         marginVertical: 15,
         borderRadius: 10,
-        backgroundColor: '#4682B4',
+        backgroundColor: '#DDA853',
         paddingVertical: 8,
         elevation: 2,
     },
@@ -450,22 +460,25 @@ const styles = StyleSheet.create({
         paddingTop: 15,
     },
     modalContainer: {
-        backgroundColor: '#fff',
+        backgroundColor: '#FFFACD',
         padding: 25,
-        borderRadius: 15,
+        borderRadius: 25,
         alignItems: 'center',
-        borderWidth: 1,
-        borderColor: '#DCDCDC',
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 6 },
+        shadowOpacity: 0.4,
+        shadowRadius: 12,
+        elevation: 12,
     },
     modalTitle: {
-        fontSize: 20,
-        fontWeight: '600',
+        fontSize: 24,
+        fontWeight: '800',
+        color: '#FF4500', // Đỏ cam nổi bật
         marginVertical: 15,
-        color: '#333',
     },
     modalText: {
         fontSize: 16,
-        color: '#666',
+        color: '#333',
         textAlign: 'center',
         marginBottom: 20,
     },
@@ -475,22 +488,25 @@ const styles = StyleSheet.create({
         width: '100%',
     },
     modalCancelButton: {
-        backgroundColor: '#4682B4',
-        borderRadius: 10,
-        paddingVertical: 5,
-        width: 100,
+        backgroundColor: '#4682B4', // Xanh đậm
+        borderRadius: 15,
+        paddingVertical: 8,
+        width: 110,
+        elevation: 4,
     },
     modalDeleteButton: {
-        backgroundColor: '#FF4500',
-        borderRadius: 10,
-        paddingVertical: 5,
-        width: 100,
+        backgroundColor: '#FF4500', // Đỏ cam
+        borderRadius: 15,
+        paddingVertical: 8,
+        width: 110,
+        elevation: 4,
     },
     modalCloseButton: {
-        backgroundColor: '#4682B4',
-        borderRadius: 10,
-        paddingVertical: 5,
-        width: 120,
+        backgroundColor: '#20B2AA', // Xanh ngọc
+        borderRadius: 15,
+        paddingVertical: 8,
+        width: 130,
+        elevation: 4,
     },
     noDataText: {
         fontSize: 18,

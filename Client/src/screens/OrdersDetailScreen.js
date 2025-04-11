@@ -15,7 +15,7 @@ const OrdersDetailScreen = ({ route }) => {
 
   const handleConfirm = async (orderId) => {
     try {
-      const response = await axios.put(`http://192.168.1.28:5000/api/orders/${orderId}/confirm`);
+      const response = await axios.put(`http://10.0.2.2:5000/api/orders/${orderId}/confirm`);
       console.log('Server response:', response.data);
       setCurrentOrder({ ...currentOrder, status: 'Đang chờ giao' }); // Cập nhật trạng thái trong state
       Alert.alert('Thành công', 'Đơn hàng đã được xác nhận thành "Đang chờ giao".');

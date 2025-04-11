@@ -46,7 +46,7 @@ const ManageFoods = () => {
         fetchFoods();
     }, []);
 
-    const API_LOCAL = `http://192.168.1.28:5000`;
+    const API_LOCAL = `http://10.0.2.2:5000`;
     const fetchFoods = async () => {
         try {
             const response = await axios.get(`${API_LOCAL}/api/foods`);
@@ -79,7 +79,7 @@ const ManageFoods = () => {
             return;
         }
         try {
-            const response = await axios.post('http:// 192.168.1.10:5000/api/foods', {
+            const response = await axios.post('http://10.0.2.2:5000/api/foods', {
                 ...newFood,
                 price: parseInt(newFood.price.replace(/[^0-9]/g, ''), 10),
                 isPopular: newFood.isPopular,
@@ -200,9 +200,7 @@ const ManageFoods = () => {
     return (
         <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : 'height'} style={{ flex: 1 }}>
             <LinearGradient colors={['#4A90E2', '#81C784']} style={styles.gradient}>
-                <View style={styles.header}>
-                    <Text style={styles.headerTitle}>{isAddMode ? 'Thêm món ăn' : 'Danh sách món ăn'}</Text>
-                </View>
+                
                 {isAddMode ? (
                     <ScrollView ref={scrollRef} contentContainerStyle={styles.scrollContainer}>
                         <TextInput
@@ -407,29 +405,7 @@ const styles = StyleSheet.create({
         flex: 1,
         backgroundColor: '#fff', // Để gradient nổi bật hơn
     },
-    header: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        paddingVertical: 20,
-        paddingHorizontal: 15,
-        backgroundColor: '#4682B4', // Màu xanh đậm hơn, không mờ
-        borderBottomLeftRadius: 20,
-        borderBottomRightRadius: 20,
-        shadowColor: '#000',
-        shadowOffset: { width: 0, height: 5 },
-        shadowOpacity: 0.3,
-        shadowRadius: 10,
-        elevation: 8,
-    },
-    headerTitle: {
-        fontSize: 26,
-        fontWeight: '800',
-        color: 'rgb(255,255,224)', // Vàng nổi bật trên nền xanh
-        marginLeft: 10,
-        textShadowColor: 'rgba(0, 0, 0, 0.4)',
-        textShadowOffset: { width: 1, height: 1 },
-        textShadowRadius: 5,
-    },
+    
     scrollContainer: {
         padding: 20,
         backgroundColor: 'rgba(255, 255, 255, 0.9)', // Nền trắng mờ nhẹ
@@ -497,7 +473,7 @@ const styles = StyleSheet.create({
     cancelButton: {
         marginVertical: 10,
         borderRadius: 15,
-        borderColor: '#FF4500', // Đỏ cam
+        borderColor: '#DDA853', // Đỏ cam
         borderWidth: 2,
         backgroundColor: 'transparent',
         paddingVertical: 10,
@@ -541,7 +517,7 @@ const styles = StyleSheet.create({
         marginVertical: 6,
     },
     cardDescription: {
-        fontSize: 15,
+        fontSize: 14,
         color: '#666',
     },
     cardCategory: {
@@ -568,12 +544,12 @@ const styles = StyleSheet.create({
     addButton: {
         marginVertical: 10,
         borderRadius: 15,
-        backgroundColor: '#4682B4', // Xanh đậm
+        backgroundColor: '#DDA853',
         paddingVertical: 10,
         elevation: 6,
     },
     modalContainer: {
-        backgroundColor: '#FFFACD', // Vàng nhạt dịu
+        backgroundColor: '#FFFACD',
         padding: 25,
         borderRadius: 25,
         alignItems: 'center',
