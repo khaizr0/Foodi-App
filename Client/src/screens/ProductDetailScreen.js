@@ -142,7 +142,11 @@ export default function ProductDetailScreen({ route, navigation }) {
             <Text className="text-blue-500"> đọc thêm</Text>
           </Text>
           <Text className="text-xl text-red-500 mb-2">
-            ${product.price.toFixed(2)}
+            {product.price.toLocaleString("vi-VN", {
+              style: "currency",
+              currency: "VND",
+              minimumFractionDigits: 0,
+            })}
           </Text>
 
           {/* Số lượng */}
@@ -182,7 +186,11 @@ export default function ProductDetailScreen({ route, navigation }) {
                   <Text className="text-gray-700">{item.name}</Text>
                   <View className="flex-row items-center">
                     <Text className="text-gray-700 mr-2">
-                      ${item.price.toFixed(2)}
+                      {item.price.toLocaleString("vi-VN", {
+                        style: "currency",
+                        currency: "VND",
+                        minimumFractionDigits: 0,
+                      })}
                     </Text>
                     {isSelected ? (
                       <Ionicons name="checkbox" size={20} color="#EF4444" />
@@ -198,7 +206,14 @@ export default function ProductDetailScreen({ route, navigation }) {
           {/* Tổng cộng */}
           <View className="mt-4 mb-6">
             <Text className="text-lg font-semibold text-gray-800">
-              Tổng cộng: <Text className="text-red-500">${totalPrice.toFixed(2)}</Text>
+              Tổng cộng:{" "}
+              <Text className="text-red-500">
+                {totalPrice.toLocaleString("vi-VN", {
+                  style: "currency",
+                  currency: "VND",
+                  minimumFractionDigits: 0,
+                })}
+              </Text>
             </Text>
           </View>
 
@@ -230,7 +245,9 @@ export default function ProductDetailScreen({ route, navigation }) {
               renderItem={({ item }) => (
                 <View className="mb-4 pb-4 border-b border-gray-100">
                   <View className="flex-row items-center justify-between mb-2">
-                    <Text className="font-semibold text-gray-800">{item.user}</Text>
+                    <Text className="font-semibold text-gray-800">
+                      {item.user}
+                    </Text>
                     <Text className="text-gray-500 text-sm">{item.date}</Text>
                   </View>
                   <View className="flex-row mb-2">
@@ -263,7 +280,12 @@ export default function ProductDetailScreen({ route, navigation }) {
           className="bg-red-500 p-4 rounded-full"
         >
           <Text className="text-white text-center text-lg font-semibold">
-            Thêm vào giỏ hàng - ${totalPrice.toFixed(2)}
+            Thêm vào giỏ hàng -{" "}
+            {totalPrice.toLocaleString("vi-VN", {
+              style: "currency",
+              currency: "VND",
+              minimumFractionDigits: 0,
+            })}
           </Text>
         </TouchableOpacity>
       </View>

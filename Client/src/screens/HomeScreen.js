@@ -95,7 +95,13 @@ export default function HomeScreen({ navigation }) {
         <Text className="text-base font-semibold text-gray-800">{item.name}</Text>
         <Text className="text-xs text-gray-500">{item.description}</Text>
         <View className="flex-row items-center justify-between mt-1">
-          <Text className="text-red-500 font-bold">{item.price.toFixed(0)} VND</Text>
+          <Text className="text-red-500 font-bold">
+            {item.price.toLocaleString("vi-VN", {
+              style: "currency",
+              currency: "VND",
+              minimumFractionDigits: 0,
+            })}
+          </Text>
           <View className="flex-row items-center">
             <Text className="text-gray-600 text-xs">{item.rating}</Text>
             <Ionicons name="star" size={12} color="#FBBF24" />
