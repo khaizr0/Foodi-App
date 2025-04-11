@@ -150,7 +150,7 @@ const ManageRevenue = () => {
       case 'Tiền mặt':
         return <FontAwesome5 name="money-bill-wave" size={16} color="#27AE60" />;
       default:
-        return <FontAwesome5 name="question-circle" size={16} color="#E67E22" />;
+        return <FontAwesome5 name="money-bill-wave" size={16} color="#27AE60" />;
     }
   };
 
@@ -281,24 +281,6 @@ const ManageRevenue = () => {
 
         {/* Filter and sort */}
         <View style={styles.filterSortContainer}>
-          {/* Payment method filter */}
-          <View style={styles.filterContainer}>
-            <Text style={styles.filterLabel}>Phương thức: </Text>
-            <View style={styles.pickerContainer}>
-              <Picker
-                selectedValue={filter}
-                style={styles.picker}
-                onValueChange={(itemValue) => filterOrdersByPayment(itemValue)}
-                dropdownIconColor="#4682B4"
-              >
-                <Picker.Item label="Tất cả" value="All" />
-                <Picker.Item label="Bank" value="Bank" />
-                <Picker.Item label="Tiền mặt" value="Tiền mặt" />
-              </Picker>
-            </View>
-          </View>
-
-          {/* Sort button */}
           <TouchableOpacity style={styles.sortButton} onPress={toggleSortOrder}>
             <MaterialCommunityIcons
               name={sortOrder === 'desc' ? 'sort-descending' : 'sort-ascending'}

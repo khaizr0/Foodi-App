@@ -5,24 +5,23 @@ import axios from 'axios';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useNavigation } from '@react-navigation/native';
 
-const ManageOrders = () => {
+const ManageOrders = ({role}) => {
   const [orders, setOrders] = useState([]);
   const [error, setError] = useState(null);
   const [refreshing, setRefreshing] = useState(false);
   const scrollRef = useRef(null);
   const navigation = useNavigation();
+  console.log('ManageOrders role:', role);
 
   useEffect(() => {
     fetchOrders();
   }, []);
-
+  
   const API_LOCAL = `http://10.0.2.2:5000`;
   const fetchOrders = async () => {
     try {
       const response = await axios.get(`${API_LOCAL}/api/orders`);
-      console.log('Orders fetched:', response.data);
       if (Array.isArray(response.data)) {
-        // Sort orders by _id (newest first) since _id contains timestamp
         const sortedOrders = [...response.data].sort((a, b) => 
           b._id.localeCompare(a._id)
         );
@@ -90,7 +89,7 @@ const ManageOrders = () => {
       Alert.alert('Lỗi', 'Không thể cập nhật đơn hàng: ' + (error.response?.data?.message || error.message));
     }
   };
-
+  
   const renderItem = useCallback(
     ({ item }) => {
       const statusColors = {
@@ -113,7 +112,7 @@ const ManageOrders = () => {
                 Trạng thái: {item.status || 'Không có trạng thái'}
               </Text>
             </View>
-            {item.status === 'Đang xử lý' && (
+            {item.status === 'Đang xử lí' && role !== 'shipper' && (
               <Button
                 mode="contained"
                 onPress={() => handleConfirm(item._id, item.status)}
@@ -122,7 +121,8 @@ const ManageOrders = () => {
                 Xác nhận
               </Button>
             )}
-            {item.status === 'Đang chờ giao' && (
+
+            {item.status === 'Đang chờ giao' && role !== 'employee' &&(
               <Button
                 mode="contained"
                 onPress={() => handleDelivered(item._id, item.status)}

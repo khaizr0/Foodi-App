@@ -16,21 +16,29 @@ import AdminAccountSettings from "../screens/AdminAccountSettings";
 const Stack = createNativeStackNavigator();
 const Tab = createBottomTabNavigator();
 
-const OrderStack = () => (
-  <Stack.Navigator>
-    <Stack.Screen name="QuanLiDonHang" component={ManageOrders} options={{ headerShown: false }} />
-    <Stack.Screen
-      name="OrderDetail"
-      component={OrdersDetailScreen}
-      options={{
-        title: 'Chi tiết đơn hàng',
-        headerStyle: { backgroundColor: '#4682B4' },
-        headerTintColor: 'rgb(255,255,224)',
-        headerTitleStyle: { fontWeight: '700', fontSize: 22 },
-      }}
-    />
-  </Stack.Navigator>
-);
+const OrderStack = ({ role }) => {
+  console.log('OrderStack role:', role);
+  return (
+    <Stack.Navigator>
+      <Stack.Screen 
+        name="QuanLiDonHang" 
+        options={{ headerShown: false }}
+      >
+        {(props) => <ManageOrders {...props} role={role} />}
+      </Stack.Screen>
+      <Stack.Screen
+        name="OrderDetail"
+        component={OrdersDetailScreen}
+        options={{
+          title: 'Chi tiết đơn hàng',
+          headerStyle: { backgroundColor: '#4682B4' },
+          headerTintColor: 'rgb(255,255,224)',
+          headerTitleStyle: { fontWeight: '700', fontSize: 22 },
+        }}
+      />
+    </Stack.Navigator>
+  );
+};
 
 const FoodStack = () => (
   <Stack.Navigator>
@@ -72,7 +80,7 @@ const RevenueStack = () => (
 
 const AdminNavigator = ({ route }) => {
   const role = route?.params?.role || 'admin';
-
+  console.log('AdminNavigator received role:', role);
   return (
     <Tab.Navigator
       screenOptions={({ route }) => ({
@@ -94,7 +102,9 @@ const AdminNavigator = ({ route }) => {
         },
       })}
     >
-      <Tab.Screen name="Đơn Hàng" component={OrderStack} />
+      <Tab.Screen name="Đơn Hàng">
+        {() => <OrderStack role={role} />}
+      </Tab.Screen>
       {role !== 'shipper' && (
         <Tab.Screen name="Món Ăn" component={FoodStack} />
       )}
