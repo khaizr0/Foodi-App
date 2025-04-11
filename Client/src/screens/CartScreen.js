@@ -18,7 +18,8 @@ export default function CartScreen({ navigation }) {
     return acc + itemTotal;
   }, 0);
 
-  const deliveryFee = 1000;
+  // Nếu không có sản phẩm, phí giao hàng trở thành 0
+  const deliveryFee = cartItems.length > 0 ? 1000 : 0;
   const total = cartSubtotal - discount + deliveryFee;
 
   // Điều hướng sang trang Thanh toán
@@ -65,7 +66,7 @@ export default function CartScreen({ navigation }) {
             <View className="mt-1">
               {item.selectedToppings.map((top) => (
                 <Text key={top.id} className="text-xs text-gray-600">
-                  + {top.name} (${top.price.toFixed(2)})
+                  + {top.name} ({top.price.toFixed(2)} VND)
                 </Text>
               ))}
             </View>
@@ -73,7 +74,7 @@ export default function CartScreen({ navigation }) {
 
           {/* Tổng giá cho sản phẩm này */}
           <Text className="text-red-500 font-bold mt-1">
-            ${itemTotal.toFixed(2)}
+            {itemTotal.toFixed(2)} VND
           </Text>
         </View>
 
@@ -130,45 +131,42 @@ export default function CartScreen({ navigation }) {
           }
         />
 
-        {/* Thông tin thanh toán */}
-        <View className="bg-gray-50 rounded-xl p-4 mt-4">
-          {/* Tổng phụ */}
-          <View className="flex-row justify-between mb-2">
-            <Text className="text-gray-600">Tổng phụ</Text>
-            <Text className="text-gray-800">{cartSubtotal.toFixed(2)} VND</Text>
+        {/* Chỉ hiển thị thông tin thanh toán khi có sản phẩm trong giỏ hàng */}
+        {cartItems.length > 0 && (
+          <View className="bg-gray-50 rounded-xl p-4 mt-4">
+            {/* Tổng phụ */}
+            <View className="flex-row justify-between mb-2">
+              <Text className="text-gray-600">Tổng phụ</Text>
+              <Text className="text-gray-800">{cartSubtotal.toFixed(2)} VND</Text>
+            </View>
+            {/* Phí giao hàng */}
+            <View className="flex-row justify-between mb-2">
+              <Text className="text-gray-600">Phí giao hàng</Text>
+              <Text className="text-gray-800">{deliveryFee.toFixed(2)} VND</Text>
+            </View>
+            {/* Ngăn cách */}
+            <View className="border-t border-gray-200 my-2" />
+            {/* Tổng cộng */}
+            <View className="flex-row justify-between mb-2">
+              <Text className="text-lg font-bold">Tổng cộng</Text>
+              <Text className="text-lg font-bold text-red-500">
+                {total.toFixed(2)} VND
+              </Text>
+            </View>
           </View>
-          {/* Giảm giá */}
-          {/* <View className="flex-row justify-between mb-2">
-            <Text className="text-gray-600">Giảm giá</Text>
-            <Text className="text-gray-800">{discount.toFixed(2)} VND</Text>
-          </View> */}
-          {/* Phí giao hàng */}
-          <View className="flex-row justify-between mb-2">
-            <Text className="text-gray-600">Phí giao hàng</Text>
-            <Text className="text-gray-800">{deliveryFee.toFixed(2)} VND</Text>
-          </View>
-          {/* Ngăn cách */}
-          <View className="border-t border-gray-200 my-2" />
-          {/* Tổng cộng */}
-          <View className="flex-row justify-between mb-2">
-            <Text className="text-lg font-bold">Tổng cộng</Text>
-            <Text className="text-lg font-bold text-red-500">
-              {total.toFixed(2)} VND
-            </Text>
-          </View>
-        </View>
+        )}
 
         {/* Nút Thanh toán */}
         <TouchableOpacity
-            onPress={handleCheckout}
-            disabled={cartItems.length === 0} // Vô hiệu hóa khi giỏ hàng trống
-            className={`p-4 rounded-full mt-4 ${
-              cartItems.length === 0 ? "bg-gray-300" : "bg-red-500"
-            }`}
-          >
-            <Text className="text-white text-center text-lg font-semibold">
-              Thanh toán
-            </Text>          
+          onPress={handleCheckout}
+          disabled={cartItems.length === 0} // Vô hiệu hóa khi giỏ hàng trống
+          className={`p-4 rounded-full mt-4 ${
+            cartItems.length === 0 ? "bg-gray-300" : "bg-red-500"
+          }`}
+        >
+          <Text className="text-white text-center text-lg font-semibold">
+            Thanh toán
+          </Text>          
         </TouchableOpacity>
       </View>
     </View>
