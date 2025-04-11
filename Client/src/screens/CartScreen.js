@@ -18,7 +18,7 @@ export default function CartScreen({ navigation }) {
     return acc + itemTotal;
   }, 0);
 
-  const deliveryFee = 1.0;
+  const deliveryFee = 1000;
   const total = cartSubtotal - discount + deliveryFee;
 
   // Điều hướng sang trang Thanh toán
@@ -135,17 +135,17 @@ export default function CartScreen({ navigation }) {
           {/* Tổng phụ */}
           <View className="flex-row justify-between mb-2">
             <Text className="text-gray-600">Tổng phụ</Text>
-            <Text className="text-gray-800">${cartSubtotal.toFixed(2)}</Text>
+            <Text className="text-gray-800">{cartSubtotal.toFixed(2)} VND</Text>
           </View>
           {/* Giảm giá */}
-          <View className="flex-row justify-between mb-2">
+          {/* <View className="flex-row justify-between mb-2">
             <Text className="text-gray-600">Giảm giá</Text>
-            <Text className="text-gray-800">-${discount.toFixed(2)}</Text>
-          </View>
+            <Text className="text-gray-800">{discount.toFixed(2)} VND</Text>
+          </View> */}
           {/* Phí giao hàng */}
           <View className="flex-row justify-between mb-2">
             <Text className="text-gray-600">Phí giao hàng</Text>
-            <Text className="text-gray-800">${deliveryFee.toFixed(2)}</Text>
+            <Text className="text-gray-800">{deliveryFee.toFixed(2)} VND</Text>
           </View>
           {/* Ngăn cách */}
           <View className="border-t border-gray-200 my-2" />
@@ -153,7 +153,7 @@ export default function CartScreen({ navigation }) {
           <View className="flex-row justify-between mb-2">
             <Text className="text-lg font-bold">Tổng cộng</Text>
             <Text className="text-lg font-bold text-red-500">
-              ${total.toFixed(2)}
+              {total.toFixed(2)} VND
             </Text>
           </View>
         </View>

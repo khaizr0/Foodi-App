@@ -31,12 +31,13 @@ export default function CheckoutScreen({ navigation, route }) {
     if (route.params?.selectedAddress) {
       setSelectedAddress(route.params.selectedAddress);
     }
-  }, [route.params]);
+  }, [route.params?.selectedAddress]);  
 
   // Danh sách chi nhánh (giữ nguyên)
   const [branches] = useState([
-    { id: "1", title: "KFC Nguyễn Ánh Thủ", address: "787 Đ. Nguyễn Ánh Thủ" },
-    { id: "2", title: "KFC Lê Văn Sỹ", address: "123 Đường Lê Văn Sỹ" },
+    { id: "1", title: "Bún Bò Huế Tâm", address: "1088 Lê Đức Thọ - Phường 13 - Gò Vấp" },
+    { id: "2", title: "Hủ tiếu mì Cô Thà", address: "78 Hẻm 102 Lê Văn Thọ, Phường 16, Gò Vấp" },
+    { id: "3", title: "Quán Bánh Xèo Cô Nguyệt", address: "774 Quang Trung, Phường 8, Gò Vấp" },
   ]);
   const [selectedBranch, setSelectedBranch] = useState(branches[0].id);
 
@@ -83,7 +84,7 @@ export default function CheckoutScreen({ navigation, route }) {
         return;
       }
       setAppliedVoucher(voucherData);
-      Alert.alert("Áp dụng voucher thành công", `Voucher giảm ${voucherData.discountPercentage}% cho đơn hàng của bạn.`);
+      Alert.alert("Áp dụng voucher thành công", `Voucher giảm {voucherData.discountPercentage}% cho đơn hàng của bạn.`);
     } catch (error) {
       console.error("Lỗi áp dụng voucher:", error);
       Alert.alert("Lỗi", `Đã xảy ra lỗi: ${error.message}`);
@@ -208,13 +209,13 @@ export default function CheckoutScreen({ navigation, route }) {
             <View className="mt-1">
               {item.selectedToppings.map((top) => (
                 <Text key={top.id} className="text-xs text-gray-600">
-                  + {top.name} (${top.price.toFixed(2)})
+                  + {top.name} ({top.price.toFixed(2)} VND)
                 </Text>
               ))}
             </View>
           )}
           <Text className="text-red-500 font-bold mt-1">
-            ${itemTotal.toFixed(2)}
+            {itemTotal.toFixed(2)} VND
           </Text>
         </View>
       </View>
@@ -262,7 +263,9 @@ export default function CheckoutScreen({ navigation, route }) {
             <Text className="text-gray-500 mb-2">Chưa chọn địa chỉ</Text>
           )}
           <TouchableOpacity
-            onPress={() => navigation.navigate("AddressManagementScreen")}
+            onPress={() => navigation.navigate("AddressManagementScreen", {
+              fromCheckout: true,   // thêm cái flag nhỏ để phân biệt
+            })}
             className="bg-red-500 p-3 rounded-full mt-2"
           >
             <Text className="text-white text-center font-semibold">Chọn địa chỉ</Text>
@@ -323,20 +326,20 @@ export default function CheckoutScreen({ navigation, route }) {
         <View className="bg-gray-50 rounded-xl p-4 mt-4">
           <View className="flex-row justify-between mb-2">
             <Text className="text-gray-600">Tổng phụ</Text>
-            <Text className="text-gray-800">${cartSubtotal.toFixed(2)}</Text>
+            <Text className="text-gray-800">{cartSubtotal.toFixed(2)} VND</Text>
           </View>
           <View className="flex-row justify-between mb-2">
             <Text className="text-gray-600">Phí giao hàng</Text>
-            <Text className="text-gray-800">$1.00</Text>
+            <Text className="text-gray-800">1000 VND</Text>
           </View>
           <View className="flex-row justify-between mb-2">
             <Text className="text-gray-600">Giảm giá voucher</Text>
-            <Text className="text-gray-800">-${discountValue.toFixed(2)}</Text>
+            <Text className="text-gray-800">{discountValue.toFixed(2)} VND</Text>
           </View>
           <View className="border-t border-gray-200 my-2" />
           <View className="flex-row justify-between mb-2">
             <Text className="text-lg font-bold">Tổng cộng</Text>
-            <Text className="text-lg font-bold text-red-500">${total.toFixed(2)}</Text>
+            <Text className="text-lg font-bold text-red-500">{total.toFixed(2)} VND</Text>
           </View>
         </View>
       </ScrollView>
@@ -344,7 +347,7 @@ export default function CheckoutScreen({ navigation, route }) {
       <View className="absolute bottom-0 left-0 right-0 flex-row items-center justify-between bg-white px-4 py-3 border-t border-gray-200">
         <View>
           <Text className="text-sm text-gray-500">Tổng thanh toán</Text>
-          <Text className="text-xl font-bold text-red-500">${total.toFixed(2)}</Text>
+          <Text className="text-xl font-bold text-red-500">{total.toFixed(2)} VND</Text>
         </View>
         <TouchableOpacity onPress={handlePlaceOrder} className="bg-red-500 px-6 py-3 rounded-lg">
           <Text className="text-white font-semibold">Đặt hàng</Text>
