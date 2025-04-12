@@ -149,23 +149,6 @@ const reviewSchema = new mongoose.Schema({
 });
 const Review = mongoose.model('Review', reviewSchema);
 
-// API: Lấy danh sách review theo foodId
-app.get('/api/reviews/:foodId', async (req, res) => {
-  try {
-    const { foodId } = req.params;
-
-    const reviews = await Review.find({ foodId })
-      .populate('userId', 'username')
-      .populate('orderId', '_id')
-      .sort({ createdAt: -1 });
-
-    res.json(reviews);
-  } catch (err) {
-    console.error('Lỗi khi lấy review theo foodId:', err.message);
-    res.status(500).json({ message: 'Lỗi server khi lấy review' });
-  }
-});
-
 // API: Lấy danh sách topping
 app.get('/api/toppings', async (req, res) => {
   try {
@@ -870,6 +853,21 @@ app.get('/api/reviews/available', async (req, res) => {
   }
 });
 
+app.get('/api/reviews/:foodId', async (req, res) => {
+  try {
+    const { foodId } = req.params;
+
+    const reviews = await Review.find({ foodId })
+      .populate('userId', 'username')
+      .populate('orderId', '_id')
+      .sort({ createdAt: -1 });
+
+    res.json(reviews);
+  } catch (err) {
+    console.error('Lỗi khi lấy review theo foodId:', err.message);
+    res.status(500).json({ message: 'Lỗi server khi lấy review' });
+  }
+});
 
 // Khởi động server
 const PORT = 5000;

@@ -43,7 +43,7 @@ export default function OrderStatusScreen({ navigation }) {
       <View className="flex-row justify-between mt-2">
         <Text className="text-base text-gray-800">{item.status}</Text>
         <Text className="text-base font-bold text-red-500">
-          ${item.priceDetails?.total.toFixed(2)}
+          {item.priceDetails?.total.toFixed(2)}đ
         </Text>
       </View>
       <View className="mt-2">
